@@ -32,6 +32,8 @@ const SHEETS = {
   variants: { names: ["الأحجام", "variants", "sizes"], label: "الأحجام", cols: [
     ["product_id", "معرّف الصنف *"], ["variant_code", "رمز الحجم *", ["variant_name"]], ["variant_name_ar", "اسم الحجم بالعربي"],
     ["variant_name_en", "اسم الحجم بالإنجليزي"], ["price", "السعر *"], ["sort_order", "الترتيب"]] },
+  addons: { names: ["الإضافات", "addons", "extras"], label: "الإضافات", cols: [
+    ["product_id", "معرّف الصنف *"], ["addon_name_ar", "اسم الإضافة بالعربي *", ["name_ar"]], ["addon_name_en", "اسم الإضافة بالإنجليزي", ["name_en"]], ["price", "السعر *"]] },
   offers: { names: ["العروض", "offers"], label: "العروض", cols: [
     ["product_id", "معرّف الصنف *"], ["offer_type", "نوع العرض *"], ["value", "القيمة (نسبة أو مبلغ)"], ["new_price", "السعر الجديد", ["offer_price"]],
     ["variant_code", "رمز الحجم (للسعر الجديد)"], ["text_ar", "نص العرض بالعربي", ["title_ar"]], ["text_en", "نص العرض بالإنجليزي", ["title_en"]],
@@ -200,6 +202,23 @@ async function analyze(file, menu, mode) {
     if (fileProds.has(pid)) p.variants = list; else { const cp = JSON.parse(JSON.stringify(p)); cp.variants = list; cp._isNew = false; cp._viaVariants = true; fileProds.set(pid, cp); } }
   for (const p of fileProds.values()) if (p.priceType === "variants" && !(p.variants?.length)) E("products", p._rec, "price_type", `الصنف «${p.id}» بأحجام ومالوش ولا صف في ورقة الأحجام.`);
 
+  /* ── add-ons: rows in the file replace that product's add-ons ── */
+  const addMap = new Map();
+  for (const rec of S.addons?.list || []) {
+    const v = rec.v, pid = str(v.product_id);
+    if (!pid) { E("addons", rec, "product_id", "معرّف الصنف فاضي."); continue; }
+    if (!allProd(pid)) { E("addons", rec, "product_id", `الصنف «${pid}» مش موجود.`); continue; }
+    const ar = str(v.addon_name_ar), en = str(v.addon_name_en), n = num(v.price);
+    if (!ar && !en) { E("addons", rec, "addon_name_ar", "اسم الإضافة فاضي."); continue; }
+    if (isNaN(n) || n < 0) { E("addons", rec, "price", `السعر «${str(v.price)}» مش رقم صحيح.`); continue; }
+    (addMap.get(pid) || addMap.set(pid, []).get(pid)).push({ name: { ar, en }, price: n });
+  }
+  for (const [pid, list] of addMap) {
+    let p = fileProds.get(pid);
+    if (!p) { p = JSON.parse(JSON.stringify(oldProd(pid))); p._isNew = false; fileProds.set(pid, p); }
+    p.addons = list;
+  }
+
   /* ── offers ── */
   const offerRows = new Map();
   for (const rec of S.offers?.list || []) { const pid = str(rec.v.product_id); if (!pid) { E("offers", rec, "product_id", "معرّف الصنف فاضي."); continue; }
@@ -275,7 +294,7 @@ async function analyze(file, menu, mode) {
     productsRemoved: update ? 0 : (menu.products || []).filter(p => !products.some(x => x.id === p.id)).length,
     categoriesRemoved: update ? 0 : (menu.categories || []).filter(c => !categories.some(x => x.id === c.id)).length,
     variantRows: S.variants?.list.length || 0, offers: [...fileProds.values()].filter(p => p._offer).length,
-    rows: { categories: S.categories?.list.length || 0, products: S.products?.list.length || 0, variants: S.variants?.list.length || 0, offers: S.offers?.list.length || 0 }
+    rows: { categories: S.categories?.list.length || 0, products: S.products?.list.length || 0, variants: S.variants?.list.length || 0, offers: S.offers?.list.length || 0, addons: S.addons?.list.length || 0 }
   };
   return { errors, warnings, summary, result: { categories, products } };
 }
@@ -305,6 +324,8 @@ async function exportMenu(menu, filename) {
     p.available === false ? "غير متاح" : "متاح", OUT.service[p.service || "both"], p.sort ?? "", YES(!!p.isNew), YES(!!p.featured)])), SHEETS.products.label);
   const vr = []; prods.forEach(p => { if (p.priceType === "variants") (p.variants || []).forEach((v, i) => vr.push([p.id, v.id, v.label?.ar || v.id, v.label?.en || v.id, v.price, i + 1])); });
   XLSX.utils.book_append_sheet(wb, sheetFrom(XLSX, SHEETS.variants, vr), SHEETS.variants.label);
+  const ar = []; prods.forEach(p => (p.addons || []).forEach(a => ar.push([p.id, a.name?.ar || "", a.name?.en || "", a.price])));
+  XLSX.utils.book_append_sheet(wb, sheetFrom(XLSX, SHEETS.addons, ar), SHEETS.addons.label);
   const or = []; prods.forEach(p => { const o = p.offer; if (!o) return;
     const base = [p.id, OUT.offer[o.type] || o.type];
     const tail = [o.text?.ar || "", o.text?.en || "", fmtDate(o.startAt), fmtDate(o.endAt), YES(o.enabled !== false)];

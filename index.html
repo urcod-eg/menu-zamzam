@@ -4,7 +4,18 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>زمزم</title>
-<meta name="description" content="المنيو الإلكتروني">
+<meta name="description" content="منيو زمزم">
+<!-- معاينة اللينك في واتساب وفيسبوك (أداة new_client.py بتملاها تلقائي لكل عميل) -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="زمزم">
+<meta property="og:title" content="زمزم | Zamzam Restaurant &amp; Cafe">
+<meta property="og:description" content="منيو زمزم — الأصناف والأسعار والعروض">
+<meta property="og:image" content="https://urcod-eg.github.io/menu-zamzam/icons/icon-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:url" content="https://urcod-eg.github.io/menu-zamzam/">
+<meta property="og:locale" content="ar_EG">
+<meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#1f5a3d">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
@@ -460,6 +471,35 @@ svg{display:block}
 .state .ic{width:2.6rem;height:2.6rem;margin:0 auto 10px;color:var(--brand)}
 .state b{display:block;font-size:1.15rem;font-weight:800}
 .state p{margin:6px auto 0;color:var(--muted);max-width:36ch}
+/* featured tab */
+.indicator.k-top{background:linear-gradient(120deg,#9a6a00,#c98a0a);box-shadow:0 10px 24px -10px #9a6a00}
+.chip.k-top{color:var(--saffron)}
+.chip.on.k-top{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.chip.on .medal{animation:sway 1.6s ease-in-out infinite;transform-origin:12px 3px}
+@keyframes sway{0%,100%{transform:rotate(0)}30%{transform:rotate(9deg)}70%{transform:rotate(-7deg)}}
+.hero-sec.top{background:linear-gradient(115deg,#8a5c00,#c98a0a 60%,#e3b23c)}
+/* open / closed badge */
+.ostat{display:inline-flex;align-items:center;gap:5px;font-style:normal;font-size:.7rem;font-weight:800;border-radius:99px;padding:1px 8px;margin-inline-start:6px;vertical-align:middle;white-space:nowrap}
+.ostat::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.ostat.on{color:#1f8a52;background:color-mix(in srgb,#1f8a52 14%,transparent)}
+.ostat.on::before{animation:pulse 1.8s ease-out infinite}
+.ostat.off{color:var(--hot);background:var(--hot-soft)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,#1f8a52 60%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
+.name b{display:inline}
+.name [data-t="tag"]{display:block}
+@media (max-width:420px){.name .ostat{display:block;width:max-content;margin:2px 0 0}}
+/* item sheet: share + add-ons */
+.s-acts{display:flex;gap:6px;flex:none}
+.fav.share{position:static;background:var(--bg);color:var(--ink)}
+.addons{border-top:1px dashed var(--line);padding-top:10px}
+.addon{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-weight:600}
+.addon:last-child{border-bottom:0}
+.addon b{font-variant-numeric:tabular-nums;color:var(--brand);white-space:nowrap}
+.addon small{color:var(--muted);font-weight:600}
+/* branches */
+.branches{display:grid;gap:10px}
+.branch{display:flex;flex-direction:column;gap:4px;padding:12px;border-radius:14px;background:var(--bg)}
+.branch span{color:var(--muted);font-size:.9rem}
 /* install bar: slides up from the bottom, once, and only where installing is possible */
 .install-bar{position:fixed;z-index:25;inset-inline:0;bottom:calc(84px + env(safe-area-inset-bottom,0px));margin:0 auto;width:min(560px,calc(100% - 24px));
   display:flex;align-items:center;gap:10px;padding:10px 10px 10px 12px;border-radius:18px;background:var(--surface);border:1px solid var(--line);
@@ -490,7 +530,7 @@ svg{display:block}
 <div class="wrap" id="app">
   <header class="bar"><div class="bar-in">
     <button class="logo" id="rLogo" aria-hidden="true" tabindex="-1"></button>
-    <div class="name"><b data-t="rname"></b><span data-t="tag"></span></div>
+    <div class="name"><b data-t="rname"></b><em class="ostat" id="ostat" hidden></em><span data-t="tag"></span></div>
     <div class="tools">
       <button class="icon-btn" id="searchBtn" aria-expanded="false" aria-label="Search"><svg class="ic" viewBox="0 0 24 24"><g class="lens"><circle cx="11" cy="11" r="6.5"/></g><path d="m20 20-4.2-4.2"/></svg></button>
       <button class="icon-btn" id="fontBtn" aria-expanded="false" aria-label="Text size"><span class="aa">A<small>a</small></span></button>

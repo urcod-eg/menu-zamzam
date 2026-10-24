@@ -127,7 +127,7 @@ function ensureShape() {
   menu.categories ||= []; menu.products ||= []; menu.ads ||= []; menu.brand ||= {}; menu.settings ||= {}; menu.contact ||= {};
   for (const k of ["name", "tagline", "about", "initial"]) menu.brand[k] ||= { ar: "", en: "" };
   menu.settings.currency ||= { ar: "ج.م", en: "EGP" }; menu.contact.address ||= { ar: "", en: "" };
-  menu.contact.orderLabel ||= { ar: "اطلب أونلاين", en: "Order online" }; menu.contact.social ||= []; menu.contact.hours ||= [];
+  menu.contact.orderLabel ||= { ar: "اطلب أونلاين", en: "Order online" }; menu.contact.social ||= []; menu.contact.hours ||= []; menu.contact.branches ||= [];
   menu.schemaVersion ||= 1;
 }
 function start() {
@@ -157,7 +157,13 @@ function go(t) {
 }
 $("#tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) go(b.dataset.tab); });
 addEventListener("resize", () => { const on = $(".tabs button[aria-current]"); if (on) { $("#tabInd").style.width = on.offsetWidth + "px"; $("#tabInd").style.transform = `translateX(${on.offsetLeft}px)`; } });
-function render() { const v = { home, cats: catsView, items: itemsView, ads: adsView, settings: settingsView }[tab]; $("#view").innerHTML = `<div class="view">${v()}</div>`; }
+function render() { const v = { home, cats: catsView, items: itemsView, ads: adsView, settings: settingsView }[tab]; $("#view").innerHTML = `<div class="view">${v()}</div>`; if (tab === "settings") drawQR(); }
+const menuLink = () => location.href.replace(/[^/]*([?#].*)?$/, "");
+function drawQR() {
+  const cv = $("#qrCanvas"); if (!cv || !window.MenuQR) return;
+  MenuQR.draw(cv, { url: menuLink(), title: L(menu.brand.name) || "المنيو", sub: "امسح الكود عشان تشوف المنيو" })
+    .catch(() => { const e = $("#qrErr"); if (e) e.textContent = "مكتبة الـ QR ماتحمّلتش. اتأكد من النت."; });
+}
 
 /* ═════════ HOME ═════════ */
 function home() {
@@ -259,7 +265,7 @@ function itemRow(p, i) {
     <div class="thumb">${thumbHTML(p.image)}</div>
     <div class="t" data-act="editItem" data-id="${p.id}"><b>${esc(L(p.name)) || "بدون اسم"}</b>
       <small>${priceSummary(p)} ${esc(L(menu.settings.currency) || "ج.م")} · ${esc(catPath(p.categoryId))}</small>
-      <span class="row" style="gap:4px;margin-top:2px">${os && os !== "draft" ? pill(os) : ""}${p.isNew ? '<span class="pill new">جديد</span>' : ""}</span></div>
+      <span class="row" style="gap:4px;margin-top:2px">${os && os !== "draft" ? pill(os) : ""}${p.isNew ? '<span class="pill new">جديد</span>' : ""}${p.featured ? '<span class="pill scheduled">الأكثر طلبًا</span>' : ""}</span></div>
     <button class="switch" role="switch" aria-checked="${p.available !== false}" aria-label="متاح" data-act="itemAvail" data-id="${p.id}"></button>
   </div>`;
 }
@@ -269,9 +275,10 @@ function itemsView() {
   if (filt.cat === "offers") list = list.filter(p => ["active", "scheduled"].includes(offerStatus(p.offer)));
   else if (filt.cat === "off") list = list.filter(p => p.available === false);
   else if (filt.cat === "new") list = list.filter(p => p.isNew);
+  else if (filt.cat === "top") list = list.filter(p => p.featured);
   else if (filt.cat !== "all") { const ids = [filt.cat, ...subsOf(filt.cat).map(s => s.id)]; list = list.filter(p => ids.includes(p.categoryId)); }
   if (q) list = list.filter(p => (p.name?.ar + " " + p.name?.en).toLowerCase().includes(q));
-  const chips = [["all", "الكل"], ["offers", "عليها عروض"], ["new", "جديد"], ["off", "غير متاح"], ...mains().map(c => [c.id, L(c.name)])];
+  const chips = [["all", "الكل"], ["offers", "عليها عروض"], ["new", "جديد"], ["top", "الأكثر طلبًا"], ["off", "غير متاح"], ...mains().map(c => [c.id, L(c.name)])];
   return `<div class="row"><h1 class="grow">الأصناف</h1><button class="btn" data-act="excel">${I.sheet}Excel</button><button class="btn primary" data-act="newItem">${I.plus}صنف</button></div>
   <input class="search" id="itemQ" type="search" placeholder="ابحث باسم الصنف…" value="${esc(filt.q)}">
   <div class="filters">${chips.map(([k, n]) => `<button class="chip ${filt.cat === k ? "on" : ""}" data-act="filt" data-id="${k}">${esc(n)}</button>`).join("")}</div>
@@ -284,6 +291,14 @@ function variantRows(vs) {
     <label class="f">السعر<input class="in v-price" inputmode="decimal" value="${v.price ?? ""}"></label>
     <button type="button" class="x" data-act="vDel" aria-label="شيل الحجم">${I.x}</button></div>`).join("");
 }
+function addonRows(list) {
+  return list.map(a => `<div class="vrow arow" style="grid-template-columns:1.2fr 1fr .8fr 40px">
+    <label class="f">الاسم<input class="in a-ar" value="${esc(a.name?.ar || "")}" placeholder="جبنة زيادة"></label>
+    <label class="f">بالإنجليزي<input class="in a-en" dir="ltr" value="${esc(a.name?.en || "")}"></label>
+    <label class="f">السعر<input class="in a-price" inputmode="decimal" value="${a.price ?? ""}"></label>
+    <button type="button" class="x" data-act="adDel" aria-label="شيل الإضافة">${I.x}</button></div>`).join("");
+}
+function readAddons() { return $$("#adList .arow").map(r => ({ name: { ar: r.querySelector(".a-ar").value.trim(), en: r.querySelector(".a-en").value.trim() }, price: num(r.querySelector(".a-price").value), _el: r })); }
 function readVariants() {
   return $$("#vList .vrow").map(r => ({ id: r.querySelector(".v-id").value.trim(), label: { ar: r.querySelector(".v-ar").value.trim(), en: r.querySelector(".v-id").value.trim() }, price: num(r.querySelector(".v-price").value), _el: r }));
 }
@@ -316,6 +331,12 @@ function itemEditor(id, catId) {
       <label class="f">نوع الخدمة</label>
       <div class="seg" id="pSvc">${SERVICE.map(([k, n]) => `<button type="button" data-v="${k}" aria-pressed="${(p.service || "both") === k}">${n}</button>`).join("")}</div>
       ${sw("pNew", !!p.isNew, "جديد", "بيظهر في قسم «جديد» وعليه شارة.")}
+      ${sw("pTop", !!p.featured, "الأكثر طلبًا", "بيظهر في قسم «الأكثر طلبًا» أول المنيو.")}
+    </fieldset>
+    <fieldset><legend>إضافات (اختياري)</legend>
+      <p class="hint" style="margin:0">زي «جبنة زيادة» أو «صوص». بتظهر في تفاصيل الصنف بسعرها.</p>
+      <div id="adList" style="display:flex;flex-direction:column;gap:8px">${addonRows(p.addons || [])}</div>
+      <button type="button" class="btn sm" data-act="adAdd">${I.plus}إضافة</button>
     </fieldset>
     <fieldset><legend>العرض</legend>
       ${sw("oOn", !!p.offer && o.enabled !== false, "عليه عرض", "بيظهر في «عروضنا» لحد تاريخ الانتهاء، وبعدها بيختفي لوحده.")}
@@ -366,6 +387,8 @@ function itemEditor(id, catId) {
     const a = e.target.closest("[data-act]")?.dataset.act;
     if (a === "vAdd") { const list = readVariants().map(v => ({ id: v.id, label: v.label, price: isNaN(v.price) ? "" : v.price })); list.push({ id: "", label: { ar: "" }, price: "" }); $("#vList").innerHTML = variantRows(list); offerPrices(); }
     if (a === "vDel") { e.target.closest(".vrow").remove(); offerPrices(); preview(); }
+    if (a === "adAdd") { const list = readAddons().map(x => ({ name: x.name, price: isNaN(x.price) ? "" : x.price })); list.push({ name: { ar: "", en: "" }, price: "" }); $("#adList").innerHTML = addonRows(list); $("#adList .arow:last-child .a-ar").focus(); }
+    if (a === "adDel") e.target.closest(".arow").remove();
     if (a === "oDur") { const s = $("#oStart").value ? new Date($("#oStart").value) : new Date(); $("#oEnd").value = toLocal(new Date(+s + e.target.dataset.d * 864e5).toISOString()); }
   });
 }
@@ -392,7 +415,13 @@ function applyItem(p, isNew) {
     }
     p.variants = vs.map(v => ({ id: v.id, label: { ar: v.label.ar || v.id, en: v.id }, price: v.price })); delete p.price;
   }
-  p.available = swv("pAvail"); p.service = segv("#pSvc"); p.isNew = swv("pNew");
+  p.available = swv("pAvail"); p.service = segv("#pSvc"); p.isNew = swv("pNew"); p.featured = swv("pTop");
+  const ads = readAddons().filter(x => x.name.ar || x.name.en || x._el.querySelector(".a-price").value.trim());
+  for (const x of ads) {
+    if (!x.name.ar && !x.name.en) { x._el.querySelector(".a-ar").classList.add("bad"); return err("كل إضافة محتاجة اسم."); }
+    if (isNaN(x.price) || x.price < 0) { x._el.querySelector(".a-price").classList.add("bad"); return err("سعر الإضافة «" + (x.name.ar || x.name.en) + "» مش رقم صحيح."); }
+  }
+  if (ads.length) p.addons = ads.map(x => ({ name: x.name, price: x.price })); else delete p.addons;
   if (swv("oOn")) {
     const t = segv("#oType"), o = { enabled: true, type: t, startAt: fromLocal($("#oStart").value), endAt: fromLocal($("#oEnd").value) };
     if (!o.endAt) { $("#oEnd").classList.add("bad"); return err("حدّد تاريخ انتهاء العرض."); }
@@ -472,6 +501,11 @@ function settingsView() {
     <button class="switch" role="switch" aria-checked="${!!h}" aria-label="شغّال ${d}" data-act="dayOn" data-id="${k}"></button>`; }).join("");
   return `<h1>الإعدادات</h1>
   <p class="hint">أي تغيير هنا بيتحفظ في التعديلات على طول، وبيوصل للزبون لما تدوس «نشر التعديلات».</p>
+  <fieldset><legend>QR Code للترابيزات</legend>
+    <div class="qrbox"><canvas id="qrCanvas" aria-label="QR Code لرابط المنيو"></canvas>
+      <div class="grow"><p class="hint" style="margin:0">اطبعه وحطه على الترابيزات والكاشير وباب المحل. الزبون يصوّره بكاميرا الموبايل فيفتح المنيو على طول.</p>
+        <button class="btn primary" data-act="qrDl">تنزيل الصورة (PNG للطباعة)</button><p class="hint" id="qrErr" style="margin:0"></p></div></div>
+  </fieldset>
   <fieldset><legend>هوية المطعم</legend>
     <div class="two stack"><label class="f">الاسم بالعربي${bind("brand.name.ar", b.name.ar)}</label><label class="f">بالإنجليزي${bind("brand.name.en", b.name.en, 'dir="ltr"')}</label></div>
     <div class="two stack"><label class="f">العبارة التعريفية${bind("brand.tagline.ar", b.tagline.ar)}</label><label class="f">بالإنجليزي${bind("brand.tagline.en", b.tagline.en, 'dir="ltr"')}</label></div>
@@ -495,6 +529,16 @@ function settingsView() {
     <div class="list" id="socials">${c.social.map((x, k) => `<div class="two" style="grid-template-columns:1fr 2fr 40px"><input class="in" data-soc="${k}" data-f="name" value="${esc(x.name)}" placeholder="Facebook"><input class="in" dir="ltr" data-soc="${k}" data-f="url" value="${esc(x.url)}" placeholder="https://"><button class="btn sm danger" data-act="socDel" data-id="${k}" aria-label="شيل">${I.x}</button></div>`).join("")}</div>
     <button class="btn sm" data-act="socAdd">${I.plus}رابط</button>
   </fieldset>
+  <fieldset><legend>الفروع (اختياري)</legend>
+    <p class="hint" style="margin:0">لو المطعم له أكتر من فرع، بتظهر في «عن المطعم» بأرقامها وخرايطها.</p>
+    <div class="list" id="branches">${(c.branches || []).map((br, k) => `<div class="card" style="display:flex;flex-direction:column;gap:8px">
+      <div class="two stack"><label class="f">اسم الفرع<input class="in" data-br="${k}" data-f="name.ar" value="${esc(br.name?.ar)}"></label><label class="f">بالإنجليزي<input class="in" dir="ltr" data-br="${k}" data-f="name.en" value="${esc(br.name?.en)}"></label></div>
+      <div class="two stack"><label class="f">العنوان<input class="in" data-br="${k}" data-f="address.ar" value="${esc(br.address?.ar)}"></label><label class="f">بالإنجليزي<input class="in" dir="ltr" data-br="${k}" data-f="address.en" value="${esc(br.address?.en)}"></label></div>
+      <div class="two stack"><label class="f">التليفون<input class="in" dir="ltr" inputmode="tel" data-br="${k}" data-f="phone" value="${esc(br.phone)}"></label><label class="f">واتساب (بكود الدولة)<input class="in" dir="ltr" inputmode="tel" data-br="${k}" data-f="whatsapp" value="${esc(br.whatsapp)}" placeholder="2010…"></label></div>
+      <label class="f">رابط الخريطة<input class="in" dir="ltr" inputmode="url" data-br="${k}" data-f="mapsUrl" value="${esc(br.mapsUrl)}" placeholder="https://"></label>
+      <button class="btn sm danger" data-act="brDel" data-id="${k}">${I.x}شيل الفرع</button></div>`).join("")}</div>
+    <button class="btn sm" data-act="brAdd">${I.plus}فرع</button>
+  </fieldset>
   <fieldset><legend>مواعيد العمل</legend><div class="hours">${hours}</div><p class="hint">اقفل اليوم اللي المطعم مابيشتغلش فيه.</p></fieldset>
   <fieldset><legend>الواجهة</legend>
     <label class="f">اللغة الافتراضية</label><div class="seg" data-seg="settings.defaultLang"><button type="button" data-v="ar" aria-pressed="${s.defaultLang !== "en"}">العربي</button><button type="button" data-v="en" aria-pressed="${s.defaultLang === "en"}">English</button></div>
@@ -503,6 +547,7 @@ function settingsView() {
     ${tog("settings.allowTheme", s.allowTheme !== false, "الزبون يقدر يغيّر الثيم")}
     ${tog("settings.showOffersTab", s.showOffersTab !== false, "إظهار قسم «عروضنا»")}
     ${tog("settings.showNewTab", s.showNewTab !== false, "إظهار قسم «جديد»")}
+    ${tog("settings.showFeaturedTab", s.showFeaturedTab !== false, "إظهار قسم «الأكثر طلبًا»")}
     <div class="two"><label class="f">العملة${bind("settings.currency.ar", s.currency.ar)}</label><label class="f">بالإنجليزي${bind("settings.currency.en", s.currency.en, 'dir="ltr"')}</label></div>
   </fieldset>
   <fieldset><legend>رفع الصور</legend><p class="hint" id="ghState">${gh === undefined ? "هيتأكد أول ما ترفع صورة." : gh ? "مفعّل" : "مش مفعّل. تقدر تحط روابط صور، أو تطلب من URCOD تفعيل الرفع من الجهاز."}</p></fieldset>`;
@@ -657,7 +702,7 @@ async function runAnalyze() {
       <div class="stat"><b>${n(s.productsAdded)}</b><span>صنف جديد</span></div>
       <div class="stat"><b>${n(s.productsUpdated)}</b><span>صنف هيتعدّل</span></div>
     </div>
-    <p class="hint">في الملف: ${n(s.rows.categories)} قسم، ${n(s.rows.products)} صنف، ${n(s.rows.variants)} صف أحجام، ${n(s.rows.offers)} صف عروض.
+    <p class="hint">في الملف: ${n(s.rows.categories)} قسم، ${n(s.rows.products)} صنف، ${n(s.rows.variants)} صف أحجام، ${n(s.rows.addons || 0)} إضافة، ${n(s.rows.offers)} صف عروض.
       ${mode === "create" && (s.productsRemoved || s.categoriesRemoved) ? `<b style="color:var(--bad)">هيتشال ${n(s.categoriesRemoved)} قسم و${n(s.productsRemoved)} صنف من المنيو الحالي.</b>` : ""}</p>
     ${r.errors.length ? `<div class="banner bad">${I.warn}<div class="grow"><b>${n(r.errors.length)} خطأ</b> لازم يتصلّحوا في الملف قبل الاستيراد. مفيش أي حاجة اتغيّرت.</div>
         <button type="button" class="btn sm" data-act="xlErrors">${I.dl}تقرير</button></div>
@@ -703,10 +748,13 @@ document.addEventListener("click", e => {
       menu.contact.hours.sort((p, q) => ((p.day + 1) % 7) - ((q.day + 1) % 7)); markDirty(); render(); break; }
     case "socAdd": menu.contact.social.push({ name: "", url: "" }); markDirty(); render(); break;
     case "socDel": menu.contact.social.splice(+id, 1); markDirty(); render(); break;
+    case "brAdd": (menu.contact.branches ||= []).push({ name: { ar: "", en: "" }, address: { ar: "", en: "" }, phone: "", whatsapp: "", mapsUrl: "" }); markDirty(); render(); break;
+    case "brDel": menu.contact.branches.splice(+id, 1); markDirty(); render(); break;
     case "imgClear": { const inp = $("#" + id); inp.value = ""; $("#" + id + "Prev").innerHTML = I.img; el.remove(); inp.dispatchEvent(new Event("change", { bubbles: true })); break; }
     case "restore": { menu = restoreOffer.menu; sessionUploads = restoreOffer.sessionUploads || []; pendingDeletes = restoreOffer.pendingDeletes || []; restoreOffer = null; ensureShape(); markDirty(); render(); toast("التعديلات رجعت"); break; }
     case "dropDraft": restoreOffer = null; store.del("draft"); render(); break;
     case "excel": excelSheet(); break;
+    case "qrDl": { const cv = $("#qrCanvas"); if (cv?.width > 300) MenuQR.download(cv, "qr-" + (C.clientId || "menu") + ".png"); else toast("الـ QR لسه بيتجهّز، ثانية وجرّب.", true); break; }
     case "xlExport": { const d = new Date(), p = n => String(n).padStart(2, "0");
       el.disabled = true; MenuExcel.exportMenu(menu, `menu-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.xlsx`)
         .catch(() => toast("مكتبة Excel ماتحمّلتش. اتأكد من النت وجرّب تاني.", true)).finally(() => el.disabled = false); break; }
@@ -720,6 +768,8 @@ document.addEventListener("click", e => { const b = e.target.closest("#bPal [dat
 document.addEventListener("input", e => {
   const t = e.target;
   if (t.id === "itemQ") { filt.q = t.value; const l = $("#itemList"); clearTimeout(t._t); t._t = setTimeout(() => { render(); const q = $("#itemQ"); q.focus(); q.setSelectionRange(q.value.length, q.value.length); }, 200); return; }
+  if (t.dataset.br != null) { const br = menu.contact.branches[+t.dataset.br], [k, sub] = t.dataset.f.split(".");
+    if (sub) { br[k] ||= {}; br[k][sub] = t.value.trim(); } else br[k] = t.value.trim(); markDirty(); return; }
   if (t.dataset.soc != null) { menu.contact.social[+t.dataset.soc][t.dataset.f] = t.value.trim(); markDirty(); return; }
   if (t.dataset.hour != null) { const h = menu.contact.hours.find(x => x.day === +t.dataset.hour); if (h) { h[t.dataset.f] = t.value; markDirty(); } return; }
 });

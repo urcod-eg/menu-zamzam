@@ -188,6 +188,9 @@ input.in[dir="ltr"]{text-align:left}
 .xt td:nth-child(2){font-variant-numeric:tabular-nums;white-space:nowrap}
 details ul{margin:6px 0 0;padding-inline-start:18px}
 a.btn{text-decoration:none;color:inherit}
+.qrbox{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.qrbox canvas{width:180px;height:225px;border-radius:12px;box-shadow:0 0 0 1px var(--line);background:#fff;flex:none}
+.qrbox .grow{display:flex;flex-direction:column;gap:10px;min-width:200px;flex:1}
 .empty{text-align:center;color:var(--muted);padding:28px 12px;border:1px dashed var(--line);border-radius:14px}
 @media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:1ms!important;transition-duration:1ms!important}}
 
@@ -215,6 +218,7 @@ a.btn.primary{color:var(--brand-ink)}
 <script src="config.js"></script>
 <script src="sample-menu.js"></script>
 <script src="data.js"></script>
+<script src="qr.js"></script>
 <script src="devpage.js"></script>
 </body>
 </html>

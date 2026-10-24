@@ -146,6 +146,11 @@ function render() {
     <div id="aOut"></div>
   </fieldset>
 
+  <fieldset><legend>QR Code للترابيزات</legend>
+    <div class="qrbox"><canvas id="qrCanvas"></canvas><div class="grow"><p class="hint" style="margin:0">ده نفس الـ QR اللي الأدمن بيلاقيه في الإعدادات. نزّله واطبعه للمطعم.</p>
+      <button class="btn primary" id="qrDl">تنزيل الصورة (PNG)</button></div></div>
+  </fieldset>
+
   <fieldset><legend>٤. المنيو</legend>
     <p class="muted" style="margin:0">${menu ? `${fmt((menu.categories || []).length)} قسم · ${fmt((menu.products || []).length)} صنف · ${fmt((menu.ads || []).length)} إعلان · إصدار ${fmt(meta?.version || 0)}` : "المنيو لسه فاضي."}</p>
     <button class="btn ${menu ? "danger" : "primary"}" id="seedBtn">${menu ? "استبدال بالمنيو التجريبي" : "رفع منيو تجريبي"}</button>
@@ -176,6 +181,9 @@ function render() {
 
 /* ═════════ actions ═════════ */
 function bind() {
+  const cv = $("#qrCanvas");
+  if (cv && window.MenuQR) MenuQR.draw(cv, { url: menuUrl(), title: menu?.brand?.name?.ar || menu?.brand?.name?.en || "المنيو", sub: "امسح الكود عشان تشوف المنيو" }).catch(() => {});
+  $("#qrDl").onclick = () => cv?.width > 300 ? MenuQR.download(cv, "qr-" + C.clientId + ".png") : toast("الـ QR لسه بيتجهّز.", true);
   $("#bLogo").addEventListener("input", e => $("#bPrev").src = e.target.value.trim() || "icons/icon-192.png");
   $$("#bPal [data-v]").forEach(b => b.onclick = () => $$("#bPal [data-v]").forEach(x => x.setAttribute("aria-pressed", x === b)));
 

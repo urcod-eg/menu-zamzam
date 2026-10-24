@@ -23,6 +23,7 @@
       palette: "green"            /* green | navy | maroon | coffee | teal */
     },
     settings: {
+      showFeaturedTab: true,
       defaultLang: "ar",          /* ar | en */
       defaultTheme: "system",     /* system | light | dark */
       allowLang: true,
@@ -35,6 +36,10 @@
       phone: "01000000000",
       whatsapp: "201000000000",
       address: t("عنوان الفرع الرئيسي، المدينة", "Main branch address, City"),
+      branches: [
+        { name: t("فرع وسط البلد", "Downtown"), address: t("شارع الجيش، بجوار البنك", "El Geish St, next to the bank"), phone: "01000000001", whatsapp: "201000000001", mapsUrl: "https://maps.google.com" },
+        { name: t("فرع الجامعة", "University"), address: t("أمام البوابة الرئيسية", "Opposite the main gate"), phone: "01000000002", whatsapp: "", mapsUrl: "" }
+      ],
       mapsUrl: "https://maps.google.com",
       hours: [
         { day: 6, open: "10:00", close: "02:00" }, { day: 0, open: "10:00", close: "02:00" },
@@ -67,7 +72,7 @@
         desc: t("بن محوّج طازة بيتحمص كل أسبوع، بتتعمل على الرمل ببطء عشان يطلع الوش تقيل والطعم ناعم. بتتقدم مع كوباية مية.",
                 "Freshly roasted spiced grind, brewed slowly on hot sand for a thick foam and smooth taste. Served with water."),
         priceType: "variants", variants: [{ id: "S", price: 30 }, { id: "M", price: 40 }, { id: "L", price: 50 }],
-        image: "", available: true, service: "both", sort: 1, featured: false, isNew: false },
+        image: "", available: true, service: "both", sort: 1, featured: true, isNew: false },
       { id: "h2", categoryId: "hot", name: t("لاتيه بندق", "Hazelnut latte"),
         desc: t("إسبريسو دبل مع لبن مبخّر وصوص بندق بيتعمل في المطعم. ينفع يتعمل بلبن لوز.",
                 "Double espresso, steamed milk and house-made hazelnut sauce. Available with almond milk."),
@@ -84,7 +89,8 @@
       { id: "b1", categoryId: "burger", name: t("برجر كلاسيك", "Classic burger"),
         desc: t("قطعة لحمة بلدي ١٥٠ جم مشوية على الفحم، جبنة شيدر، خس وطماطم وبصل، في عيش بريوش. معاه بطاطس.",
                 "150 g local beef grilled over charcoal, cheddar, lettuce, tomato and onion in a brioche bun. Comes with fries."),
-        priceType: "single", price: 120, image: "", available: true, service: "both", sort: 1,
+        priceType: "single", price: 120, image: "", available: true, service: "both", sort: 1, featured: true,
+        addons: [{ name: t("جبنة شيدر زيادة", "Extra cheddar"), price: 15 }, { name: t("بيكون", "Bacon"), price: 25 }, { name: t("بطاطس كبيرة", "Large fries"), price: 20 }],
         offer: { enabled: true, type: "custom", text: t("اشتري ٢ والتالت هدية", "Buy 2, get the 3rd free"), endAt: at(26) } },
       { id: "b2", categoryId: "burger", name: t("برجر دبل", "Double burger"),
         desc: t("قطعتين لحمة ١٥٠ جم، دبل شيدر، بصل مكرمل وصوص البيت.", "Two 150 g patties, double cheddar, caramelised onion and house sauce."),

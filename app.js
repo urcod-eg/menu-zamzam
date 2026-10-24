@@ -22,6 +22,7 @@ const ICONS = {
   plate:'<svg class="ic" viewBox="0 0 28 28"><circle cx="14" cy="15" r="9"/><circle class="cherry" cx="14" cy="15" r="5"/><path d="M4 4v6M6 4v6M5 10v14M24 4c-2 2-2 6 0 8v12"/></svg>',
   fav:'<svg class="ic heart-ic" viewBox="0 0 24 24"><path d="M12 20s-7.5-4.4-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.6-7.5 10-7.5 10Z"/></svg>',
   offers:'<svg class="ic" viewBox="0 0 24 24"><g class="flame"><path d="M12 21c-4 0-6.5-2.6-6.5-6.2 0-3.6 3-5.8 3.6-9.3 2.4 1.4 3.4 3.4 3.4 5.2 1-1 1.6-2.2 1.7-3.6 2.5 2 4.3 4.8 4.3 7.7 0 3.6-2.5 6.2-6.5 6.2Z"/><path class="core" d="M12 21c-1.7 0-2.8-1.1-2.8-2.7 0-1.6 1.3-2.6 2.8-4.3 1.5 1.7 2.8 2.7 2.8 4.3 0 1.6-1.1 2.7-2.8 2.7Z"/></g></svg>',
+  top:'<svg class="ic" viewBox="0 0 24 24"><g class="medal"><path d="M8 3h8l-2 6h-4z"/><circle cx="12" cy="15" r="5.5"/><path d="M12 12.4l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z"/></g></svg>',
   new:'<svg class="ic" viewBox="0 0 24 24"><path class="spark" d="M11 3l1.6 4.6L17 9.2l-4.4 1.6L11 15.4 9.4 10.8 5 9.2l4.4-1.6z"/><path class="spark s2" d="M18 14l.8 2.2 2.2.8-2.2.8L18 20l-.8-2.2-2.2-.8 2.2-.8z"/><path class="spark s3" d="M5 16l.6 1.4L7 18l-1.4.6L5 20l-.6-1.4L3 18l1.4-.6z"/></svg>'
 };
 const icon = k => ICONS[k] || ICONS.plate;
@@ -40,6 +41,7 @@ const I = {
   pin:'<svg class="ic" viewBox="0 0 24 24"><path d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.3"/></svg>',
   link:'<svg class="ic" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
   lock:'<svg class="ic" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>',
+  share:'<svg class="ic" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>',
   wifi:'<svg class="ic" viewBox="0 0 24 24"><path d="M2 8.5a15 15 0 0 1 20 0M5 12a10 10 0 0 1 14 0M8.5 15.5a5 5 0 0 1 7 0"/><circle cx="12" cy="19" r="1"/><path d="M3 3l18 18"/></svg>'
 };
 
@@ -59,6 +61,8 @@ const T = {
   urcodAbout:"URCOD بتبني أنظمة جاهزة ومخصّصة للمطاعم والشركات، شغالة على الموبايل والكمبيوتر، وكل عميل بياخد نسخة بهويته.",
   devT:"المطوّر",sysT:"أنظمتنا",sys:["المنيو الإلكتروني","إدارة المطاعم","إدارة الجيم","المرتبات والحضور","ERP عملاء ومخازن","مواقع احترافية"],
   getCopy:"عايز نسخة لمطعمك أو نظام مخصّص؟",ver:"الإصدار",
+  topSec:"الأكثر طلبًا",topHead:"الأكثر طلبًا",topSub:"الأصناف اللي زباينّا بيحبوها أكتر",addons:"إضافات",share:"مشاركة",
+  openNow:"مفتوح الآن",closedNow:"مقفول دلوقتي",closesAt:"بيقفل {t}",opensAt:"بيفتح {t}",branches:"فروعنا",
   install:"تثبيت التطبيق",installSub:"افتح المنيو من الشاشة الرئيسية",installT:"نزّل المنيو على موبايلك",installP:"يفتح أسرع، ومن غير ما تدوّر على اللينك.",installGo:"تثبيت",
   installed:"التطبيق اتثبّت على موبايلك.",iosT:"تثبيت المنيو على الآيفون",ios1:"دوس على زرار المشاركة {i} تحت في Safari",ios2:"اختار «إضافة إلى الشاشة الرئيسية» (Add to Home Screen)",ios3:"دوس «إضافة»، وهتلاقي المنيو جنب تطبيقاتك",
   adminLogin:"دخول إدارة المطعم",devLogin:"دخول المطوّر",email:"البريد الإلكتروني",pass:"كلمة السر",word:"كلمة الأمان",passAgain:"كلمة السر تاني",
@@ -83,6 +87,8 @@ const T = {
   urcodAbout:"URCOD builds ready-made and custom systems for restaurants and businesses, on phone and desktop, with each client getting a copy in its own brand.",
   devT:"Developer",sysT:"Our systems",sys:["Digital menu","Restaurant management","Gym management","Payroll & attendance","ERP: customers & stock","Professional websites"],
   getCopy:"Want a copy for your restaurant or a custom system?",ver:"Version",
+  topSec:"Most popular",topHead:"Most popular",topSub:"The dishes our guests love most",addons:"Add-ons",share:"Share",
+  openNow:"Open now",closedNow:"Closed now",closesAt:"closes {t}",opensAt:"opens {t}",branches:"Our branches",
   install:"Install the app",installSub:"Open the menu from your home screen",installT:"Add the menu to your phone",installP:"Opens faster, no need to look for the link.",installGo:"Install",
   installed:"The app is installed.",iosT:"Install on iPhone",ios1:"Tap the Share button {i} at the bottom of Safari",ios2:"Choose \u201cAdd to Home Screen\u201d",ios3:"Tap \u201cAdd\u201d. The menu now sits with your apps",
   adminLogin:"Restaurant admin login",devLogin:"Developer login",email:"Email",pass:"Password",word:"Security word",passAgain:"Password again",
@@ -217,17 +223,19 @@ function card(p, n) {
 }
 
 /* ═════════ sections ═════════ */
-const SPECIAL = { offers: "k-offers", new: "k-new", fav: "k-fav" };
+const SPECIAL = { offers: "k-offers", top: "k-top", new: "k-new", fav: "k-fav" };
 function itemsFor(id) {
   if (id === "offers") return ALL.filter(liveOffer).sort((a, b) => new Date(a.offer.endAt) - new Date(b.offer.endAt));
   if (id === "new") return ALL.filter(p => p.isNew);
+  if (id === "top") return ALL.filter(p => p.featured);
   if (id === "fav") return ALL.filter(p => favs.has(p.id));
   return ALL.filter(p => p.main.id === id);
 }
 function rail() {
-  const t = T[lang], s = M.settings || {}, nOff = itemsFor("offers").length, nNew = itemsFor("new").length;
+  const t = T[lang], s = M.settings || {}, nOff = itemsFor("offers").length, nNew = itemsFor("new").length, nTop = itemsFor("top").length;
   const chips = [
     s.showOffersTab !== false && nOff ? { id: "offers", name: t.offers, count: nOff } : null,
+    s.showFeaturedTab !== false && nTop ? { id: "top", name: t.topSec } : null,
     s.showNewTab !== false && nNew ? { id: "new", name: t.newSec } : null,
     { id: "fav", name: t.favs, count: favs.size, cid: "favCount" },
     ...MAINS.map(c => ({ id: c.id, name: L(c.name), icon: c.icon, off: c.available === false }))
@@ -257,6 +265,7 @@ function head(items) {
   if (active === "offers") { const f = items[0];
     return `<div class="hero-sec offers"><svg class="ic big" viewBox="0 0 24 24"><path d="M12 21c-4 0-6.5-2.6-6.5-6.2 0-3.6 3-5.8 3.6-9.3 2.4 1.4 3.4 3.4 3.4 5.2 1-1 1.6-2.2 1.7-3.6 2.5 2 4.3 4.8 4.3 7.7 0 3.6-2.5 6.2-6.5 6.2Z"/></svg>
       <h2>${t.offersHead}</h2><p>${t.offersSub}</p>${f ? `<span class="soon" data-soon="${f.offer.endAt}">${I.clock.replace('class="ic"', 'class="ic" style="width:1rem;height:1rem"')}<span>${t.soonest} ${shortLeft(f.offer.endAt)}</span></span>` : ""}</div>`; }
+  if (active === "top") return `<div class="hero-sec top"><svg class="ic big" viewBox="0 0 24 24"><path d="M8 3h8l-2 6h-4z"/><circle cx="12" cy="15" r="5.5"/></svg><h2>${t.topHead}</h2><p>${t.topSub}</p></div>`;
   if (active === "new") return `<div class="hero-sec new"><svg class="ic big" viewBox="0 0 24 24"><path d="M11 3l1.6 4.6L17 9.2l-4.4 1.6L11 15.4 9.4 10.8 5 9.2l4.4-1.6z"/></svg><h2>${t.newHead}</h2><p>${t.newSub}</p></div>`;
   if (active === "fav") return `<div class="sec"><h2>${t.favs}</h2>${items.length ? `<small>${fmt(items.length)} ${t.items}</small>` : ""}</div>`;
   const c = MAINS.find(c => c.id === active);
@@ -326,10 +335,11 @@ function sheetHTML(p) {
     ${st ? `<span class="stamp ${st.alt ? "alt" : ""}">${st.html}</span>` : ""}
     <button class="s-close" id="sClose" aria-label="${t.close}">${I.close}</button></div>
   <div class="s-body">
-    <div class="s-head"><h2 id="sTitle">${esc(L(p.name))}</h2>${favBtn(p)}</div>
+    <div class="s-head"><h2 id="sTitle">${esc(L(p.name))}</h2><div class="s-acts"><button class="fav share" id="sShare" aria-label="${t.share}">${I.share}</button>${favBtn(p)}</div></div>
     ${L(p.desc) ? `<p class="s-desc">${esc(L(p.desc))}</p>` : ""}
     ${hasSizes(p) ? `<div><div style="font-weight:800;margin-bottom:8px">${t.size}</div><div class="sizes">${r.map((x, j) => `<button class="size ${j ? "" : "on"}" data-j="${j}" ${av ? "" : "disabled"}>${esc(x.label)}${x.now != null ? `<s>${fmt(x.base)}</s><span>${fmt(x.now)} ${cur()}</span>` : `<span>${fmt(x.base)} ${cur()}</span>`}</button>`).join("")}</div></div>` : ""}
     <div class="s-price" id="sPrice">${priceHTML(p, r[0], false)}</div>
+    ${p.addons?.length ? `<div class="addons"><div style="font-weight:800;margin-bottom:6px">${t.addons}</div>${p.addons.map(a => `<div class="addon"><span>${esc(L(a.name))}</span><b>+${fmt(a.price)} <small>${cur()}</small></b></div>`).join("")}</div>` : ""}
     ${coupon(p)}
     <div class="facts">${av ? "" : `<span class="fact warn">${I.na}${t.na}</span>`}
       <span class="fact">${p.service !== "pickup_only" ? I.scoot : ""}${p.service !== "delivery_only" ? I.bag : ""}${t[p.service] || t.both}</span></div>
@@ -452,6 +462,35 @@ function logoHTML() {
   const src = b.logoUrl && safeUrl(b.logoUrl) ? esc(b.logoUrl) : "icons/icon-192.png";
   return `<img src="${src}" alt="" onerror="this.replaceWith(document.createTextNode('${letter.replace(/'/g, "")}'))">`;
 }
+/* ═════════ share an item ═════════ */
+const baseUrl = () => location.href.split("#")[0];
+async function shareItem(p) {
+  if (!p) return; const r = cheapest(p), price = r.now ?? r.base, url = baseUrl() + "#item-" + encodeURIComponent(p.id);
+  const text = `${L(p.name)} — ${fmt(price)} ${cur()}\n${L(M.brand?.name)}`;
+  if (navigator.share) { try { await navigator.share({ title: L(p.name), text, url }); return; } catch (e) { if (e && e.name === "AbortError") return; } }
+  window.open("https://wa.me/?text=" + encodeURIComponent(text + "\n" + url), "_blank", "noopener");
+}
+/* ═════════ open now / closed (from opening hours, overnight aware) ═════════ */
+const minsOf = v => { const [h, m] = String(v || "0:0").split(":"); return (+h || 0) * 60 + (+m || 0); };
+function openState() {
+  const hours = M?.contact?.hours; if (!hours?.length) return null;
+  const now = new Date(), cur0 = now.getHours() * 60 + now.getMinutes(), d = now.getDay();
+  const hY = hours.find(h => h.day === (d + 6) % 7), hT = hours.find(h => h.day === d);
+  if (hY && minsOf(hY.close) <= minsOf(hY.open) && cur0 < minsOf(hY.close)) return { open: true, at: hY.close };
+  if (hT) { const o = minsOf(hT.open), c = minsOf(hT.close);
+    if (c <= o ? cur0 >= o : cur0 >= o && cur0 < c) return { open: true, at: hT.close };
+    if (cur0 < o) return { open: false, at: hT.open }; }
+  return { open: false };
+}
+const clock12 = v => { const d = new Date(); d.setHours(+String(v).split(":")[0] || 0, +String(v).split(":")[1] || 0, 0, 0);
+  return d.toLocaleTimeString(lang === "ar" ? "ar-EG" : "en", { hour: "numeric", minute: "2-digit" }); };
+function openBadge() {
+  const el = $("#ostat"), st = M && openState(); if (!el) return;
+  if (!st) { el.hidden = true; return; }
+  const t = T[lang]; el.hidden = false; el.className = "ostat " + (st.open ? "on" : "off");
+  el.textContent = st.open ? t.openNow + (st.at ? " · " + t.closesAt.replace("{t}", clock12(st.at)) : "") : t.closedNow + (st.at ? " · " + t.opensAt.replace("{t}", clock12(st.at)) : "");
+}
+setInterval(openBadge, 60000);
 function pages() {
   const t = T[lang], b = M.brand || {}, c = M.contact || {}, today = new Date().getDay();
   const maps = safeUrl(c.mapsUrl), wa = (c.whatsapp || "").replace(/\D/g, "");
@@ -463,7 +502,10 @@ function pages() {
       ${wa ? `<div class="row">${I.chat}<div class="v"><small>${t.wa}</small><span class="ltr">+${esc(wa)}</span></div><a class="copy" style="display:grid;place-items:center;text-decoration:none" href="https://wa.me/${wa}" target="_blank" rel="noopener">${t.wa}</a></div>` : ""}
       ${L(c.address) ? `<div class="row">${I.pin}<div class="v"><small>${t.address}</small><span>${esc(L(c.address))}</span></div>${maps ? `<a class="copy" style="display:grid;place-items:center;text-decoration:none" href="${esc(maps)}" target="_blank" rel="noopener">${t.map}</a>` : ""}</div>` : ""}
     </div>
-    ${c.hours?.length ? `<div class="panel"><h3>${t.hoursT}</h3><div class="hours">${c.hours.map(h => `<span class="${h.day === today ? "today" : ""}">${t.days[h.day]}</span><span class="ltr ${h.day === today ? "today" : ""}" style="text-align:start">${esc(h.open)} – ${esc(h.close)}</span>`).join("")}</div></div>` : ""}
+    ${(c.branches || []).length ? `<div class="panel"><h3>${t.branches}</h3><div class="branches">${c.branches.map(br => { const bw = (br.whatsapp || "").replace(/\D/g, ""), bm = safeUrl(br.mapsUrl);
+      return `<div class="branch"><b>${esc(L(br.name))}</b>${L(br.address) ? `<span>${esc(L(br.address))}</span>` : ""}${br.phone ? `<span class="ltr">${esc(br.phone)}</span>` : ""}
+        <div class="row" style="gap:6px;border:0;padding:0">${br.phone ? `<button class="copy" data-copy="${esc(br.phone)}">${t.copy}</button>` : ""}${bw ? `<a class="copy" style="display:grid;place-items:center;text-decoration:none" href="https://wa.me/${bw}" target="_blank" rel="noopener">${t.wa}</a>` : ""}${bm ? `<a class="copy" style="display:grid;place-items:center;text-decoration:none" href="${esc(bm)}" target="_blank" rel="noopener">${t.map}</a>` : ""}</div></div>`; }).join("")}</div></div>` : ""}
+    ${c.hours?.length ? `<div class="panel"><h3>${t.hoursT} ${(() => { const st = openState(); return st ? `<em class="ostat ${st.open ? "on" : "off"}">${st.open ? t.openNow : t.closedNow}</em>` : ""; })()}</h3><div class="hours">${c.hours.map(h => `<span class="${h.day === today ? "today" : ""}">${t.days[h.day]}</span><span class="ltr ${h.day === today ? "today" : ""}" style="text-align:start">${esc(h.open)} – ${esc(h.close)}</span>`).join("")}</div></div>` : ""}
     ${c.social?.length ? `<div class="panel"><h3>${t.social}</h3><div class="socials">${c.social.filter(s => safeUrl(s.url)).map(s => `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener">${I.link}${esc(s.name)}</a>`).join("")}</div></div>` : ""}
   </div>`;
   $("#pUrcod").innerHTML = bar("pUrcod", t.urcodT) + `<div class="page-in">
@@ -555,7 +597,8 @@ $("#grid").addEventListener("click", e => { const f = e.target.closest(".fav"); 
 $("#grid").addEventListener("keydown", e => { const c = e.target.closest(".card"); if (c && e.target === c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openSheet(c.dataset.id); } });
 $("#sheet").addEventListener("click", e => {
   if (e.target.closest("#sClose")) return closeSheet();
-  const f = e.target.closest(".fav"); if (f) return toggleFav(f.dataset.fav, f);
+  if (e.target.closest("#sShare")) return shareItem(ALL.find(i => i.id === openId));
+  const f = e.target.closest(".fav"); if (f && f.dataset.fav) return toggleFav(f.dataset.fav, f);
   const b = e.target.closest(".size"); if (!b) return;
   const p = ALL.find(i => i.id === openId); b.parentElement.querySelectorAll(".size").forEach(x => x.classList.toggle("on", x === b));
   $("#sPrice").innerHTML = priceHTML(p, rows(p)[+b.dataset.j], false); $("#sPrice").firstElementChild.style.setProperty("--i", -6);
@@ -608,8 +651,9 @@ function render() {
   if (licenseClosed()) return stateScreen("closed");
   $("#state").hidden = true; ["#ads", ".rail-wrap", "#secHead", "#grid"].forEach(s => $(s).hidden = false);
   if (!ALL.length) { buildAds(); return stateScreen("empty"); }
-  buildAds(); rail(); grid(); autoplay();
+  buildAds(); rail(); grid(); autoplay(); openBadge();
   if (openId) openSheet(openId);
+  else if (!render.linked) { render.linked = true; const m = location.hash.match(/^#item-(.+)$/); if (m) { const id = decodeURIComponent(m[1]); if (ALL.some(p => p.id === id)) setTimeout(() => openSheet(id), 350); } }
 }
 
 /* ═════════ boot ═════════ */
