@@ -687,7 +687,7 @@ function excelSheet() {
     <fieldset><legend>١. جهّز الملف</legend>
       <div class="row"><a class="btn" href="templates/menu-template.xlsx" download="قالب-المنيو.xlsx">${I.dl}القالب الفاضي</a>
         <button type="button" class="btn" data-act="xlExport">${I.dl}المنيو الحالي</button></div>
-      <p class="hint">منيو جديد: نزّل القالب واملاه. تعديل منيو موجود: نزّل «المنيو الحالي»، عدّل فيه، وارفعه تاني. نوع السعر لكل صنف إما «سعر واحد» (السعر في ورقة الأصناف) أو «أحجام» (صف لكل حجم في ورقة الأحجام).</p>
+      <p class="hint">ورقة واحدة اسمها «المنيو»، وصف لكل صنف، ومن غير أي أكواد: اكتب اسم القسم واسم الصنف والسعر. لو الصنف بأحجام اكتب في «الأحجام والأسعار»: صغير 30، وسط 40، كبير 50. والقالب فيه ورقة «مثال» تبص عليها. تعديل منيو موجود: نزّل «المنيو الحالي»، عدّل فيه، وارفعه تاني.</p>
     </fieldset>
     <fieldset><legend>٢. طريقة الاستيراد</legend>
       <div class="seg" id="xlMode"><button type="button" data-v="update" aria-pressed="true">تحديث المنيو الحالي</button><button type="button" data-v="create" aria-pressed="false">منيو جديد بالكامل</button></div>
@@ -699,7 +699,7 @@ function excelSheet() {
     </fieldset></div>`, [["تطبيق على التعديلات", "primary", applyImport]]);
   const hint = m => $("#xlHint").textContent = m === "create"
     ? "الأقسام والأصناف الحالية هتتشال، ويتحط مكانها اللي في الملف. الإعلانات والإعدادات مش هتتغيّر."
-    : "الصنف اللي معرّفه موجود بيتعدّل، والجديد بيتضاف، واللي مش في الملف بيفضل زي ما هو. الخانة الفاضية = سيب القيمة القديمة.";
+    : "الصنف اللي اسمه موجود في نفس القسم بيتعدّل، والجديد بيتضاف، واللي مش في الملف بيفضل زي ما هو. الخانة الفاضية = سيب القيمة القديمة.";
   hint("update"); applyBtn().disabled = true;
   segBind("#xlMode", m => { hint(m); if (xl.file) runAnalyze(); });
   $("#xlFile").addEventListener("change", e => { xl.file = e.target.files[0] || null; e.target.value = ""; if (xl.file) runAnalyze(); });
@@ -720,7 +720,7 @@ async function runAnalyze() {
       <div class="stat"><b>${n(s.productsAdded)}</b><span>صنف جديد</span></div>
       <div class="stat"><b>${n(s.productsUpdated)}</b><span>صنف هيتعدّل</span></div>
     </div>
-    <p class="hint">في الملف: ${n(s.rows.categories)} قسم، ${n(s.rows.products)} صنف، ${n(s.rows.variants)} صف أحجام، ${n(s.rows.addons || 0)} إضافة، ${n(s.rows.offers)} صف عروض.
+    <p class="hint">في الملف: ${n(s.rows.categories)} قسم، ${n(s.rows.products)} صنف، ${n(s.rows.variants)} حجم، ${n(s.rows.addons || 0)} إضافة، ${n(s.rows.offers)} عرض.
       ${mode === "create" && (s.productsRemoved || s.categoriesRemoved) ? `<b style="color:var(--bad)">هيتشال ${n(s.categoriesRemoved)} قسم و${n(s.productsRemoved)} صنف من المنيو الحالي.</b>` : ""}</p>
     ${r.errors.length ? `<div class="banner bad">${I.warn}<div class="grow"><b>${n(r.errors.length)} خطأ</b> لازم يتصلّحوا في الملف قبل الاستيراد. مفيش أي حاجة اتغيّرت.</div>
         <button type="button" class="btn sm" data-act="xlErrors">${I.dl}تقرير</button></div>

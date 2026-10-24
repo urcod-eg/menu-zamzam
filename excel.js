@@ -104,6 +104,178 @@ function readSheet(XLSX, wb, spec) {
   return { name, list, map };
 }
 
+
+/* ═════════ الشكل السهل: ورقة واحدة «المنيو»، صف لكل صنف، من غير أي أكواد ═════════
+   القسم والقسم الفرعي بالاسم، الأحجام والإضافات مكتوبة في خانة واحدة («صغير 30، وسط 40»)،
+   والعرض بكلام عادي («20%» أو «خصم 25» أو «بـ 99» أو «توصيل مجاني» أو أي جملة). */
+const SIMPLE = { names: ["المنيو", "menu", "منيو"], label: "المنيو", cols: [
+  ["cat", "القسم *", ["القسم", "category", "اسم القسم"]], ["cat_en", "القسم بالإنجليزي", ["category en", "category_en"]],
+  ["sub", "القسم الفرعي", ["قسم فرعي", "subcategory", "sub category"]],
+  ["name", "اسم الصنف *", ["اسم الصنف", "الصنف", "الاسم", "item", "name"]], ["name_en", "الاسم بالإنجليزي", ["name en", "name_en", "اسم الصنف بالإنجليزي"]],
+  ["desc", "الوصف", ["description", "الوصف بالعربي"]], ["desc_en", "الوصف بالإنجليزي", ["description en", "description_en"]],
+  ["price", "السعر", ["price", "سعر"]], ["sizes", "الأحجام والأسعار", ["الأحجام", "الاحجام", "sizes", "احجام واسعار"]],
+  ["addons", "الإضافات", ["الاضافات", "addons", "extras", "إضافات"]],
+  ["offer", "العرض", ["offer", "عرض"]], ["offer_end", "العرض لحد", ["العرض ينتهي", "ينتهي العرض", "offer end", "نهاية العرض"]],
+  ["avail", "متاح؟", ["متاح", "available", "الإتاحة", "الاتاحه"]], ["new", "جديد؟", ["جديد", "new"]],
+  ["top", "الأكثر طلبًا؟", ["الأكثر طلبا", "الاكثر طلبا", "مميز", "featured", "الأكثر طلبًا"]],
+  ["image", "رابط الصورة", ["الصورة", "صورة", "image", "image url"]]] };
+/* أيقونة القسم بتتختار لوحدها من اسمه (وتتغيّر من اللوحة لو حبيت) */
+const AUTO_ICON = [["coffee", ["قهو", "كافي", "ساخن", "شاي", "نسكافي", "coffee", "tea", "hot"]], ["drink", ["مشروب", "عصير", "عصائر", "بارد", "كوكتيل", "سموذي", "ميلك", "صودا", "drink", "juice", "shake"]],
+  ["burger", ["برجر", "برغر", "burger"]], ["pizza", ["بيتز", "pizza", "فطير"]], ["sandwich", ["ساندوتش", "سندوتش", "ساندويتش", "شاورم", "كريب", "sandwich", "wrap", "crepe"]],
+  ["chicken", ["فراخ", "دجاج", "بروست", "chicken"]], ["grill", ["مشوي", "شوي", "كباب", "كفت", "لحوم", "grill", "bbq", "meat"]], ["fish", ["سمك", "اسماك", "أسماك", "جمبري", "بحري", "fish", "sea"]],
+  ["salad", ["سلط", "salad"]], ["breakfast", ["فطار", "فطور", "بيض", "فول", "breakfast"]], ["dessert", ["حلو", "حلويات", "كيك", "تورت", "ايس", "آيس", "جيلاتي", "dessert", "cake", "sweet", "ice"]]];
+function autoIcon(...names) { const t = names.map(key).join(" "); for (const [ic, words] of AUTO_ICON) if (words.some(w => t.includes(key(w)))) return ic; return "plate"; }
+let uid = 0; const newId = p => p + Date.now().toString(36) + (uid++).toString(36);
+/* «صغير 30، وسط 40، كبير 50» أو «جبنة زيادة 15 - بيكون 25» → [{name, price}] */
+function pairs(v) {
+  const t = digits(str(v)); if (!t) return { list: [] };
+  const list = [], bad = [];
+  for (let part of t.split(/[،,؛;\n|+]+|\s[-–]\s/)) {
+    part = part.trim(); if (!part) continue;
+    const m = part.match(/^(.*?)[\s:=\-–]*(\d+(?:[.٫]\d+)?)\s*(?:ج\.?م|جنيه|egp|le)?\.?$/i);
+    if (!m || !m[1].trim()) { bad.push(part); continue; }
+    list.push({ name: m[1].trim().replace(/[:=\-–]+$/, "").trim(), price: Math.round(parseFloat(m[2].replace("٫", ".")) * 100) / 100 });
+  }
+  return { list, bad };
+}
+const NO_OFFER = ["لا", "مفيش", "بدون", "no", "none", "-", "0"];
+function offerFrom(text, p) {
+  const t = digits(str(text)), k = key(t);
+  if (/[%٪]/.test(t)) { const n = num(t.replace(/[^\d.]/g, "")); return isNaN(n) || n <= 0 || n >= 100 ? { err: "نسبة الخصم لازم تكون من ١ لـ ٩٩ (زي 20%)." } : { type: "percent", value: n }; }
+  if (/توصيل|دليفري|delivery/.test(k) && /مجان|ببلاش|free/.test(k)) return { type: "free_delivery" };
+  let m = t.match(/^\s*(?:خصم|discount|off)\s*(\d+(?:\.\d+)?)\s*(?:ج\.?م|جنيه)?\s*$/i);
+  if (m) return { type: "amount", value: +m[1] };
+  m = t.match(/^\s*(?:بـ|ب|سعر|بسعر|السعر|price|new)\s*:?\s*(\d+(?:\.\d+)?)\s*(?:ج\.?م|جنيه)?\s*$/i);
+  if (m) return { type: "price", price: +m[1] };
+  if (p.priceType === "variants") { const pr = pairs(t); if (pr.list.length && !pr.bad.length) {
+    const prices = {}; for (const x of pr.list) { const v = p.variants.find(v => key(v.label?.ar || v.id) === key(x.name) || key(v.id) === key(x.name)); if (!v) return { err: `الحجم «${x.name}» مش من أحجام الصنف ده.` }; prices[v.id] = x.price; }
+    return { type: "price", prices }; } }
+  return { type: "custom", text: { ar: str(text), en: "" } };
+}
+
+async function analyzeSimple(XLSX, wb, menu, mode) {
+  const sh = readSheet(XLSX, wb, Object.assign({}, SIMPLE, { cols: SIMPLE.cols.map(([k, l, al]) => [k, l, [key(l).replace(/\*$/, "").trim(), ...(al || [])].map(x => key(x).replace(/ /g, "_").replace(/\*$/, "").replace(/_+$/, ""))]) }));
+  const errors = [], warnings = [], L = SIMPLE.label;
+  const head = k => (SIMPLE.cols.find(c => c[0] === k) || [, k])[1].replace(" *", "");
+  const E = (rec, k, msg) => errors.push({ sheet: L, row: rec ? rec.row : "", col: rec && k ? (rec.col[k] || "") + " · " + head(k) : "", msg });
+  const W = (rec, msg) => warnings.push({ sheet: L, row: rec ? rec.row : "", msg });
+  if (sh.missingHeader) return { fatal: "ورقة «المنيو» مافيهاش صف العناوين. أول صف لازم يكون فيه «القسم» و«اسم الصنف»." };
+  if (sh.list.length > MAX_ROWS) return { fatal: `الملف فيه ${sh.list.length} صف، والحد ${MAX_ROWS}.` };
+  const update = mode === "update", clone = x => JSON.parse(JSON.stringify(x));
+  const oldCats = update ? (menu.categories || []) : [], oldProds = update ? (menu.products || []) : [];
+  const cats = update ? oldCats.map(clone) : [], prods = update ? oldProds.map(clone) : [];
+  const catSeen = new Set(), prodSeen = new Set(), touched = new Set();
+  let catOrder = 0; const subOrder = {}, prodOrder = {};
+  const findCat = (name, parentId) => cats.find(c => (c.parentId || null) === parentId && (key(c.name?.ar) === key(name) || key(c.name?.en) === key(name)));
+  const ensureCat = (name, en, parentId, rec) => {
+    let c = findCat(name, parentId);
+    if (!c) { const par = parentId && cats.find(x => x.id === parentId), ic = autoIcon(name, en);
+      c = { id: newId("c"), parentId, name: { ar: name, en: en || "" }, icon: ic === "plate" && par ? par.icon : ic, available: true, hidden: false, _new: true }; cats.push(c); }
+    else if (en && c.name.en !== en) { c.name.en = en; touched.add(c.id); }
+    if (!catSeen.has(c.id)) { catSeen.add(c.id);
+      if (!parentId) { c.sort = ++catOrder; } else { subOrder[parentId] = (subOrder[parentId] || 0) + 1; c.sort = subOrder[parentId]; } }
+    return c;
+  };
+  let rowsWithItems = 0, variantRows = 0, addonRows = 0, offerRows = 0;
+  let lastCat = "", lastCatEn = "", lastSub = "";
+  for (const rec of sh.list) {
+    const v = rec.v;
+    /* القسم الفاضي = نفس قسم الصف اللي فوقه (عشان ماتكتبوش كل مرة) */
+    let catName = str(v.cat), sub = str(v.sub);
+    if (catName) { lastCat = catName; lastCatEn = str(v.cat_en); lastSub = sub; } else { catName = lastCat; if (!sub) sub = lastSub; }
+    if (!catName) { E(rec, "cat", "اكتب اسم القسم (في أول صف على الأقل)."); continue; }
+    const main = ensureCat(catName, str(v.cat) ? str(v.cat_en) : lastCatEn, null, rec);
+    const holder = sub ? ensureCat(sub, "", main.id, rec) : main;
+    const name = str(v.name);
+    if (!name) { if (str(v.price) || str(v.sizes)) E(rec, "name", "فيه سعر من غير اسم صنف."); continue; }   /* صف فيه قسم بس = قسم فاضي */
+    rowsWithItems++;
+    const dupKey = holder.id + "|" + key(name);
+    if (prodSeen.has(dupKey)) { E(rec, "name", `الصنف «${name}» متكرر في نفس القسم.`); continue; }
+    prodSeen.add(dupKey);
+    let p = prods.find(x => x.categoryId === holder.id && key(x.name?.ar) === key(name))
+      || (update ? prods.find(x => key(x.name?.ar) === key(name) && !touched.has(x.id) && prods.filter(y => key(y.name?.ar) === key(name)).length === 1) : null);
+    const isNew = !p;
+    if (isNew) { p = { id: newId("p"), name: { ar: name, en: "" }, desc: { ar: "", en: "" }, priceType: "single", image: "", available: true, service: "both", isNew: false, featured: false, _new: true }; prods.push(p); }
+    touched.add(p.id); p.desc ||= { ar: "", en: "" }; p.name ||= { ar: name, en: "" };
+    p.categoryId = holder.id; p.name.ar = name;
+    prodOrder[holder.id] = (prodOrder[holder.id] || 0) + 1; p.sort = prodOrder[holder.id];
+    for (const [k, f, sb] of [["name_en", "name", "en"], ["desc", "desc", "ar"], ["desc_en", "desc", "en"]]) { const t = str(v[k]); if (t) p[f][sb] = t; else if (!update) p[f][sb] = ""; }
+    /* السعر: سعر واحد أو أحجام */
+    const sz = pairs(v.sizes);
+    if (sz.bad?.length) E(rec, "sizes", `مش فاهم «${sz.bad[0]}». اكتب الحجم وبعده السعر، وافصل بفاصلة: صغير 30، وسط 40، كبير 50`);
+    else if (sz.list.length) {
+      const old = p.priceType === "variants" ? p.variants || [] : [];
+      p.variants = sz.list.map((x, i) => { const o = old.find(v => key(v.label?.ar || v.id) === key(x.name) || key(v.id) === key(x.name));
+        return o ? Object.assign({}, o, { price: x.price }) : { id: x.name.replace(/["'<>`]/g, ""), label: { ar: x.name, en: "" }, price: x.price }; });
+      if (new Set(p.variants.map(x => key(x.id))).size !== p.variants.length) E(rec, "sizes", "فيه حجم متكرر.");
+      p.priceType = "variants"; delete p.price; variantRows += sz.list.length;
+      if (str(v.price)) W(rec, "الصنف ده ليه أحجام، فخانة «السعر» اتجاهلت.");
+    } else if (str(v.price)) {
+      const n = num(v.price); if (isNaN(n) || n < 0) E(rec, "price", `السعر «${str(v.price)}» مش رقم.`); else { p.priceType = "single"; p.price = n; delete p.variants; }
+    } else if (isNew || p.priceType !== "single" && !(p.variants || []).length) E(rec, "price", "اكتب السعر، أو الأحجام بأسعارها.");
+    /* الإضافات */
+    const ad = pairs(v.addons);
+    if (ad.bad?.length) E(rec, "addons", `مش فاهم «${ad.bad[0]}». اكتب الإضافة وبعدها السعر: جبنة زيادة 15، بيكون 25`);
+    else if (ad.list.length) { const old = p.addons || []; p.addons = ad.list.map(x => { const o = old.find(a => key(a.name?.ar) === key(x.name)); return { name: { ar: x.name, en: o?.name?.en || "" }, price: x.price }; }); addonRows += ad.list.length; }
+    else if (str(v.addons) === "" && !update) delete p.addons;
+    if (key(v.addons) && NO_OFFER.some(w => key(w) === key(v.addons))) delete p.addons;
+    /* العرض */
+    const ot = str(v.offer);
+    if (ot && NO_OFFER.some(w => key(w) === key(ot))) delete p.offer;
+    else if (ot) {
+      const o = offerFrom(ot, p);
+      if (o.err) E(rec, "offer", o.err);
+      else {
+        const bases = p.priceType === "variants" ? (p.variants || []).map(x => +x.price) : [+p.price];
+        if (o.type === "amount" && bases.some(b => o.value >= b)) E(rec, "offer", "مبلغ الخصم أكبر من السعر أو بيساويه.");
+        else if (o.type === "price" && o.price != null && p.priceType === "variants") E(rec, "offer", "الصنف ده بأحجام: اكتب سعر العرض لكل حجم (زي: صغير 25، وسط 35)، أو استخدم نسبة زي 20%.");
+        else if (o.type === "price" && o.price != null && o.price >= bases[0]) E(rec, "offer", `سعر العرض لازم يكون أقل من ${bases[0]}.`);
+        else if (o.prices && Object.entries(o.prices).some(([id, np]) => np >= +(p.variants.find(x => x.id === id) || {}).price)) E(rec, "offer", "سعر العرض لحجم من الأحجام مش أقل من سعره الأصلي.");
+        else {
+          let end = date(v.offer_end);
+          if (end === null) { E(rec, "offer_end", `التاريخ «${str(v.offer_end)}» مش مفهوم. اكتبه كده: 2026-12-31 أو 31/12/2026`); }
+          else {
+            if (!end) { end = new Date(Date.now() + 30 * 864e5).toISOString(); W(rec, `العرض على «${name}» مالوش تاريخ نهاية، فهيفضل ٣٠ يوم. تقدر تغيّره من اللوحة.`); }
+            else if (new Date(end) <= Date.now()) W(rec, "العرض ده تاريخه خلص، ومش هيظهر للزبون.");
+            const prev = p.offer && p.offer.type === o.type ? p.offer : null;
+            p.offer = Object.assign({ enabled: true, startAt: prev?.startAt || null }, o, { endAt: end });
+            if (o.type === "custom" && prev?.text?.en) p.offer.text.en = prev.text.en;
+            offerRows++;
+          }
+        }
+      }
+    }
+    /* نعم / لا */
+    const av = pick(v.avail, AVAIL.concat([[true, ["نعم", "ايوه", "أيوة", "اه", "صح"]], [false, ["لا", "خلصان", "خلص"]]]));
+    if (av === null) E(rec, "avail", `«${str(v.avail)}» لازم تكون نعم أو لا.`); else if (av !== undefined) p.available = av; else if (!update) p.available = true;
+    for (const [k, f] of [["new", "isNew"], ["top", "featured"]]) { const b = pick(v[k], BOOL); if (b === null) E(rec, k, `«${str(v[k])}» لازم تكون نعم أو لا.`); else if (b !== undefined) p[f] = b; else if (!update) p[f] = false; }
+    const img = str(v.image);
+    if (img) { if (!/^https:\/\/\S+$/i.test(img)) E(rec, "image", "رابط الصورة لازم يبدأ بـ https://"); else p.image = img; }
+  }
+  if (!rowsWithItems && !catSeen.size) errors.push({ sheet: L, row: "", col: "", msg: "ورقة «المنيو» فاضية." });
+  /* في وضع «منيو جديد» بنشيل الأقسام اللي مش في الملف */
+  let categories = cats, products = prods;
+  if (!update) { categories = cats.filter(c => catSeen.has(c.id)); }
+  /* مقارنة بالمنيو الحالي */
+  const strip = x => { const c = Object.assign({}, x); for (const k in c) if (k.startsWith("_")) delete c[k]; return c; };
+  /* تغيير في المعنى بس: ترتيب المفاتيح والقيم الفاضية والثواني مش بتتحسب */
+  const canon = v => {
+    if (Array.isArray(v)) return v.map(canon);
+    if (v && typeof v === "object") { const o = {}; Object.keys(v).sort().forEach(k => { if (k.startsWith("_")) return; const c = canon(v[k]);
+      if (c === null || c === undefined || c === "" || c === false || (typeof c === "object" && !Array.isArray(c) && !Object.keys(c).length)) return; o[k] = c; }); return o; }
+    if (typeof v === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(v)) return v.slice(0, 16);
+    return v; };
+  const sameJ = (a, b) => JSON.stringify(canon(a)) === JSON.stringify(canon(b));
+  const keepOld = (list, oldList) => { const om = new Map(oldList.map(x => [x.id, x])); return list.map(x => { const o = om.get(x.id); return o && sameJ(o, x) ? o : strip(x); }); };
+  categories = keepOld(categories, menu.categories || []); products = keepOld(products, menu.products || []);
+  const cnt = (list, oldList) => { const om = new Map(oldList.map(x => [x.id, x])); let a = 0, n = 0; for (const x of list) { const o = om.get(x.id); if (!o) a++; else if (!sameJ(o, x)) n++; } return { a, n }; };
+  const cs = cnt(categories, menu.categories || []), ps = cnt(products, menu.products || []);
+  const summary = { mode, simple: true, categoriesAdded: cs.a, categoriesUpdated: cs.n, productsAdded: ps.a, productsUpdated: ps.n,
+    productsRemoved: update ? 0 : (menu.products || []).length, categoriesRemoved: update ? 0 : (menu.categories || []).length,
+    variantRows, offers: offerRows, rows: { categories: catSeen.size, products: rowsWithItems, variants: variantRows, offers: offerRows, addons: addonRows } };
+  return { errors, warnings, summary, result: { categories, products } };
+}
+
 /* ═════════ parse + validate + build the merged result ═════════ */
 async function analyze(file, menu, mode) {
   const XLSX = await lib();
@@ -114,8 +286,10 @@ async function analyze(file, menu, mode) {
   if (!/\.(xlsx|xlsm|xls)$/i.test(file.name)) return { fatal: "الملف لازم يكون Excel (.xlsx)." };
   let wb; try { wb = XLSX.read(await file.arrayBuffer(), { cellDates: false }); } catch { return { fatal: "الملف ده مش بيتفتح. اتأكد إنه Excel سليم." }; }
 
+  /* الشكل السهل (ورقة «المنيو») أولًا، والشكل القديم بالأكواد لسه شغال */
+  if (wb.SheetNames.some(n => SIMPLE.names.some(x => key(x) === key(n)))) return analyzeSimple(XLSX, wb, menu, mode);
   const S = {}; for (const k in SHEETS) S[k] = readSheet(XLSX, wb, SHEETS[k]);
-  if (!S.products && !S.categories) return { fatal: "مالقيتش ورقة «الأقسام» ولا «الأصناف». استخدم القالب ومتغيّرش أسماء الأوراق." };
+  if (!S.products && !S.categories) return { fatal: "مالقيتش ورقة «المنيو». نزّل القالب من اللوحة واكتب جواه، ومتغيّرش اسم الورقة." };
   for (const k in S) if (S[k]?.missingHeader) E(k, null, null, `ورقة «${S[k].name}» مافيهاش صف أسماء الأعمدة (زي ${SHEETS[k].cols[0][0]}).`);
   const total = Object.values(S).reduce((n, s) => n + (s?.list.length || 0), 0);
   if (total > MAX_ROWS) return { fatal: `الملف فيه ${total} صف، والحد ${MAX_ROWS}.` };
@@ -316,22 +490,29 @@ function sheetFrom(XLSX, spec, rows) {
 }
 async function exportMenu(menu, filename) {
   const XLSX = await lib(), wb = XLSX.utils.book_new();
-  const cats = (menu.categories || []).slice().sort((a, b) => (a.parentId ? 1 : 0) - (b.parentId ? 1 : 0) || (a.sort ?? 0) - (b.sort ?? 0));
-  const prods = (menu.products || []).slice().sort((a, b) => String(a.categoryId).localeCompare(b.categoryId) || (a.sort ?? 0) - (b.sort ?? 0));
-  XLSX.utils.book_append_sheet(wb, sheetFrom(XLSX, SHEETS.categories, cats.map(c => [c.id, c.name?.ar || "", c.name?.en || "", c.parentId || "", OUT.icon[c.icon] || "أطباق", c.sort ?? "", YES(c.available !== false), YES(!!c.hidden)])), SHEETS.categories.label);
-  XLSX.utils.book_append_sheet(wb, sheetFrom(XLSX, SHEETS.products, prods.map(p => [p.id, p.categoryId, p.name?.ar || "", p.name?.en || "", p.desc?.ar || "", p.desc?.en || "",
-    OUT.price_type[p.priceType === "variants" ? "variants" : "single"], p.priceType === "variants" ? "" : (p.price ?? ""), p.image && !p.image.startsWith("blob:") ? p.image : "",
-    p.available === false ? "غير متاح" : "متاح", OUT.service[p.service || "both"], p.sort ?? "", YES(!!p.isNew), YES(!!p.featured)])), SHEETS.products.label);
-  const vr = []; prods.forEach(p => { if (p.priceType === "variants") (p.variants || []).forEach((v, i) => vr.push([p.id, v.id, v.label?.ar || v.id, v.label?.en || v.id, v.price, i + 1])); });
-  XLSX.utils.book_append_sheet(wb, sheetFrom(XLSX, SHEETS.variants, vr), SHEETS.variants.label);
-  const ar = []; prods.forEach(p => (p.addons || []).forEach(a => ar.push([p.id, a.name?.ar || "", a.name?.en || "", a.price])));
-  XLSX.utils.book_append_sheet(wb, sheetFrom(XLSX, SHEETS.addons, ar), SHEETS.addons.label);
-  const or = []; prods.forEach(p => { const o = p.offer; if (!o) return;
-    const base = [p.id, OUT.offer[o.type] || o.type];
-    const tail = [o.text?.ar || "", o.text?.en || "", fmtDate(o.startAt), fmtDate(o.endAt), YES(o.enabled !== false)];
-    if (o.type === "price" && o.prices) Object.entries(o.prices).forEach(([code, np]) => or.push([...base, "", np, code, ...tail]));
-    else or.push([...base, o.value ?? "", o.type === "price" ? o.price ?? "" : "", "", ...tail]); });
-  XLSX.utils.book_append_sheet(wb, sheetFrom(XLSX, SHEETS.offers, or), SHEETS.offers.label);
+  const cats = (menu.categories || []).slice().sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+  const mains = cats.filter(c => !c.parentId), subsOf = id => cats.filter(c => c.parentId === id);
+  const prodsOf = id => (menu.products || []).filter(p => p.categoryId === id).sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0));
+  const money = n => n == null || n === "" ? "" : String(n);
+  const offerText = p => { const o = p.offer; if (!o) return "";
+    if (o.type === "percent") return o.value + "%"; if (o.type === "amount") return "خصم " + o.value; if (o.type === "free_delivery") return "توصيل مجاني";
+    if (o.type === "price") return o.prices ? Object.entries(o.prices).map(([id, np]) => ((p.variants || []).find(v => v.id === id)?.label?.ar || id) + " " + np).join("، ") : "بـ " + o.price;
+    return o.text?.ar || o.text?.en || ""; };
+  const rows = [];
+  const row = (main, sub, p) => rows.push([main.name?.ar || main.name?.en || "", main.name?.en || "", sub ? sub.name?.ar || sub.name?.en || "" : "",
+    p ? p.name?.ar || "" : "", p ? p.name?.en || "" : "", p ? p.desc?.ar || "" : "", p ? p.desc?.en || "" : "",
+    p && p.priceType !== "variants" ? money(p.price) : "", p && p.priceType === "variants" ? (p.variants || []).map(v => (v.label?.ar || v.id) + " " + v.price).join("، ") : "",
+    p ? (p.addons || []).map(a => (a.name?.ar || a.name?.en) + " " + a.price).join("، ") : "", p ? offerText(p) : "", p?.offer ? fmtDate(p.offer.endAt) : "",
+    p ? YES(p.available !== false) : "", p ? YES(!!p.isNew) : "", p ? YES(!!p.featured) : "", p && p.image && !p.image.startsWith("blob:") ? p.image : ""]);
+  for (const m of mains) {
+    const own = prodsOf(m.id), subs = subsOf(m.id);
+    if (!own.length && !subs.length) row(m, null, null);
+    own.forEach(p => row(m, null, p));
+    for (const sb of subs) { const ps = prodsOf(sb.id); if (!ps.length) row(m, sb, null); ps.forEach(p => row(m, sb, p)); }
+  }
+  const ws = XLSX.utils.aoa_to_sheet([SIMPLE.cols.map(c => c[1]), ...rows]);
+  ws["!cols"] = SIMPLE.cols.map(([k]) => ({ wch: /desc/.test(k) ? 40 : /sizes|addons/.test(k) ? 30 : /name|cat|sub|offer$|image/.test(k) ? 20 : 12 }));
+  XLSX.utils.book_append_sheet(wb, ws, SIMPLE.label);
   wb.Workbook = { Views: [{ RTL: true }] };
   XLSX.writeFile(wb, filename || "menu.xlsx");
 }
@@ -344,5 +525,5 @@ async function exportErrors(errors, warnings) {
   XLSX.writeFile(wb, "menu-import-errors.xlsx");
 }
 
-return { lib, analyze, exportMenu, exportErrors, _test: { num, date, pick, BOOL, PRICE_T, OFFER_T } };
+return { lib, analyze, exportMenu, exportErrors, _test: { num, date, pick, BOOL, PRICE_T, OFFER_T, pairs, offerFrom, autoIcon } };
 })();
