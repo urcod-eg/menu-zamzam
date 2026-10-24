@@ -14,7 +14,7 @@
   window.SAMPLE_MENU = {
     schemaVersion: 1,
     brand: {
-      name: t("زمزم", "Zamzam"),
+      name: t("زمزم", "Zamzam Restaurant & Cafe"),
       tagline: t("عبارة تعريفية قصيرة", "Short tagline"),
       about: t("هنا بيكتب المطعم نبذة عنه: بدأ إمتى، بيقدّم إيه، وإيه اللي يميّزه. النص ده بيتعدّل من لوحة الإدارة.",
                "A short story about the restaurant goes here: when it started, what it serves and what makes it different. Edited from the admin panel."),

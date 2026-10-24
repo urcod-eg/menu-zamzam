@@ -197,22 +197,11 @@ a.btn{text-decoration:none;color:inherit}
   <div class="top-in">
     <div class="who"><b id="rName">—</b><small id="licLine"></small></div>
     <button class="publish" id="publishBtn" disabled><svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M5 20h14"/></svg><span>نشر التعديلات</span><span class="n" id="dirtyN" hidden></span></button>
-    <button class="icon-btn" id="logoutBtn" aria-label="تسجيل الخروج"><svg class="ic" viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg></button>
+    <button class="icon-btn" id="logoutBtn" aria-label="خروج والرجوع للمنيو" title="خروج"><svg class="ic" viewBox="0 0 24 24"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10"/></svg></button>
   </div>
 </header>
 
 <main id="main">
-  <div class="login card" id="loginBox" hidden>
-    <h1>لوحة إدارة المنيو</h1>
-    <p class="muted">ادخل بحساب الإدارة اللي اتسلّم لك.</p>
-    <form class="form" id="loginF" novalidate>
-      <label class="f">البريد الإلكتروني<input class="in" id="lEmail" type="email" dir="ltr" autocomplete="username" required></label>
-      <label class="f">كلمة المرور<input class="in" id="lPass" type="password" dir="ltr" autocomplete="current-password" required></label>
-      <p class="err" id="lErr" role="alert"></p>
-      <button class="btn primary" type="submit" id="lBtn">دخول</button>
-      <button class="btn ghost sm" type="button" id="resetBtn">نسيت كلمة المرور</button>
-    </form>
-  </div>
   <div id="view"></div>
 </main>
 

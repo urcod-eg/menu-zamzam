@@ -25,10 +25,6 @@ window.URCOD_CONFIG = {
      التعديلات بتوصل للزبون في خلال المدة دي بالكتير. */
   metaCheckMinutes: 5,
 
-  /* رابط لوحة المطور (urcod-dev-panel). ١٠ ضغطات على لوجو URCOD بتفتحها.
-     لو فاضي، بتفتح tools/seed.html في نفس النسخة. */
-  devPanelUrl: "https://urcod-eg.github.io/menu-hub/",
-
   /* نسخة مكتبة Firebase (ثابتة عمدًا، ماتتغيّرش من غير تجربة) */
   firebaseSdk: "10.12.2"
 };

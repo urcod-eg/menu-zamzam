@@ -59,11 +59,13 @@ const T = {
   urcodAbout:"URCOD بتبني أنظمة جاهزة ومخصّصة للمطاعم والشركات، شغالة على الموبايل والكمبيوتر، وكل عميل بياخد نسخة بهويته.",
   devT:"المطوّر",sysT:"أنظمتنا",sys:["المنيو الإلكتروني","إدارة المطاعم","إدارة الجيم","المرتبات والحضور","ERP عملاء ومخازن","مواقع احترافية"],
   getCopy:"عايز نسخة لمطعمك أو نظام مخصّص؟",ver:"الإصدار",
-  adminLogin:"دخول إدارة المطعم",devLogin:"دخول المطور",email:"البريد الإلكتروني",pass:"كلمة المرور",enter:"دخول",entering:"جاري الدخول…",
+  adminLogin:"دخول إدارة المطعم",devLogin:"دخول المطوّر",email:"البريد الإلكتروني",pass:"كلمة السر",word:"كلمة الأمان",passAgain:"كلمة السر تاني",
+  setupTitle:"تجهيز النسخة لأول مرة",setupHint:"اختار كلمة سر وكلمة أمان للمطوّر. هتدخل بيهم بعد كده بـ ١٠ ضغطات على لوجو URCOD.",setupGo:"تجهيز ودخول",
+  errShort:"كلمة السر ٦ حروف على الأقل، وكلمة الأمان ٣ على الأقل.",errMatch:"كلمتين السر مش زي بعض.",noAdmin:"لسه مفيش حساب إدارة للمطعم ده. كلّم URCOD.",enter:"دخول",entering:"جاري الدخول…",
   closedT:"المنيو مش متاح دلوقتي",closedP:"المطعم هيرجّع المنيو قريب. تقدر تتواصل معاهم من «عن المطعم».",
   offlineT:"مفيش اتصال بالإنترنت",offlineP:"أول مرة المنيو محتاج إنترنت عشان يتحمّل. بعد كده هيفتح حتى من غير نت.",
   emptyT:"المنيو لسه بيتجهّز",emptyP:"الأصناف هتظهر هنا أول ما الإدارة تضيفها.",updated:"المنيو اتحدّث",
-  loginSample:"الدخول بيشتغل بعد ربط Firebase في config.js.",errCred:"البريد أو كلمة المرور غلط.",errMany:"محاولات كتير. استنى دقيقة وجرّب تاني.",
+  loginSample:"الدخول بيشتغل بعد ربط Firebase في config.js.",errCred:"كلمة السر أو كلمة الأمان غلط.",errMany:"محاولات كتير. استنى دقيقة وجرّب تاني.",
   errRole:"الحساب ده مالوش صلاحية الدخول هنا.",errNet:"مفيش اتصال. اتأكد من النت وجرّب تاني.",okGo:"تم الدخول، بيفتح اللوحة…"},
  en:{search:"Search the menu…",pinned:"Pinned 15s",cur:"EGP",na:"Currently unavailable",both:"Delivery & pickup",delivery_only:"Delivery only",pickup_only:"Pickup only",
   new:"New",secOff:"Section paused",favs:"Favorites",offers:"Offers",newSec:"New",
@@ -79,11 +81,13 @@ const T = {
   urcodAbout:"URCOD builds ready-made and custom systems for restaurants and businesses, on phone and desktop, with each client getting a copy in its own brand.",
   devT:"Developer",sysT:"Our systems",sys:["Digital menu","Restaurant management","Gym management","Payroll & attendance","ERP: customers & stock","Professional websites"],
   getCopy:"Want a copy for your restaurant or a custom system?",ver:"Version",
-  adminLogin:"Restaurant admin login",devLogin:"Developer login",email:"Email",pass:"Password",enter:"Sign in",entering:"Signing in…",
+  adminLogin:"Restaurant admin login",devLogin:"Developer login",email:"Email",pass:"Password",word:"Security word",passAgain:"Password again",
+  setupTitle:"First-time setup",setupHint:"Choose the developer password and security word. You'll use them with 10 taps on the URCOD logo.",setupGo:"Set up and sign in",
+  errShort:"Password needs 6+ characters and the security word 3+.",errMatch:"The passwords don't match.",noAdmin:"No admin account yet. Contact URCOD.",enter:"Sign in",entering:"Signing in…",
   closedT:"The menu is not available right now",closedP:"The restaurant will bring it back soon. You can still reach them from About us.",
   offlineT:"No internet connection",offlineP:"The menu needs the internet the first time. After that it opens offline too.",
   emptyT:"The menu is being prepared",emptyP:"Items will appear here as soon as the restaurant adds them.",updated:"Menu updated",
-  loginSample:"Sign-in works once Firebase is set in config.js.",errCred:"Wrong email or password.",errMany:"Too many attempts. Wait a minute and try again.",
+  loginSample:"Sign-in works once Firebase is set in config.js.",errCred:"Wrong password or security word.",errMany:"Too many attempts. Wait a minute and try again.",
   errRole:"This account can't sign in here.",errNet:"No connection. Check the internet and try again.",okGo:"Signed in, opening the panel…"}
 };
 
@@ -465,7 +469,7 @@ function pages() {
     <div class="panel"><h3>${t.getCopy}</h3>${crow(I.phone, t.phone + " · " + t.wa, DEV.phone)}
       <div class="row">${I.link}<div class="v"><small>LinkedIn</small><span>${DEV.name.en}</span></div><a class="copy" style="display:grid;place-items:center;text-decoration:none" href="${DEV.linkedin}" target="_blank" rel="noopener">LinkedIn</a></div></div>
     <p class="u-ver">URCOD Digital Menu · ${t.ver} ${DEV.version}</p></div>`;
-  taps($("#uLogo"), 10, () => C.devPanelUrl ? (location.href = devUrl()) : loginSheet("dev"));
+  taps($("#uLogo"), 10, () => loginSheet("dev"));
 }
 let pageOpen = null, pageFrom = null;
 function openPage(id) { pageFrom = document.activeElement; pageOpen = id; $("#" + id).scrollTop = 0; $("#" + id).classList.add("open"); document.body.style.overflow = "hidden";
@@ -480,44 +484,57 @@ document.addEventListener("click", e => {
 });
 
 /* ═════════ hidden sign-in (7 taps restaurant logo / 10 taps URCOD logo) ═════════ */
-const devUrl = () => C.devPanelUrl ? C.devPanelUrl.replace(/#.*$/, "") + "#client-" + encodeURIComponent(C.clientId) : "tools/seed.html";
 function taps(el, n, fn) { if (!el) return; let c = 0, tm; el.addEventListener("click", () => { c++; clearTimeout(tm); tm = setTimeout(() => c = 0, 1500); if (c >= n) { c = 0; fn(); } }); }
-function loginSheet(kind) {
+/* دخول مخفي بكلمة سر + كلمة أمان (من غير بريد).
+   الإدارة: ٧ ضغطات على لوجو المطعم. المطوّر: ١٠ ضغطات على لوجو URCOD (وأول مرة بيجهّز النسخة). */
+async function loginSheet(kind) {
   const t = T[lang]; openId = null;
+  let setup = false;
+  if (kind === "dev" && !C.useSample) { try { const m = await MenuData.meta(); setup = !m || !m.devReady; } catch {} }
   $("#sheet").innerHTML = `<div class="grab"></div><form class="s-body login" id="loginF" novalidate>
-    <h3 id="sTitle">${kind === "dev" ? t.devLogin : t.adminLogin}</h3>
-    <label>${t.email}<input id="lEmail" type="email" autocomplete="username" required></label>
-    <label>${t.pass}<input id="lPass" type="password" autocomplete="current-password" required></label>
+    <h3 id="sTitle">${setup ? t.setupTitle : kind === "dev" ? t.devLogin : t.adminLogin}</h3>
+    ${setup ? `<p class="demo">${t.setupHint}</p>` : ""}
+    <label>${t.pass}<input id="lPass" type="password" autocomplete="off" required></label>
+    ${setup ? `<label>${t.passAgain}<input id="lPass2" type="password" autocomplete="off" required></label>` : ""}
+    <label>${t.word}<input id="lWord" type="password" autocomplete="off" required></label>
     <p class="err" id="lErr" role="alert"></p>
-    <button class="go" type="submit">${t.enter}</button></form>`;
+    <button class="go" type="submit">${setup ? t.setupGo : t.enter}</button></form>`;
   $("#sheet").classList.add("open"); $("#scrim").classList.add("open"); document.body.style.overflow = "hidden";
-  $("#loginF").onsubmit = e => { e.preventDefault(); signIn(kind); };
-  setTimeout(() => $("#lEmail").focus(), 300);
+  $("#loginF").onsubmit = e => { e.preventDefault(); signIn(kind, setup); };
+  setTimeout(() => $("#lPass").focus(), 300);
 }
-async function signIn(kind) {
-  const t = T[lang], err = $("#lErr"), btn = $("#loginF .go");
+async function signIn(kind, setup) {
+  const t = T[lang], err = $("#lErr"), btn = $("#loginF .go"), label = btn.textContent;
   const lock = store.get("lock", 0); if (Date.now() < lock) { err.textContent = t.errMany; return; }
   if (C.useSample) { err.textContent = t.loginSample; return; }
+  const pass = $("#lPass").value, word = $("#lWord").value.trim();
+  if (pass.length < 6 || word.length < 3) { err.textContent = t.errShort; return; }
+  if (setup && pass !== $("#lPass2").value) { err.textContent = t.errMatch; return; }
   btn.disabled = true; btn.textContent = t.entering; err.textContent = "";
   try {
-    const { app, db, fs } = await MenuData.firebase();
-    const auth = await import("https://www.gstatic.com/firebasejs/" + C.firebaseSdk + "/firebase-auth.js");
-    const a = auth.getAuth(app);
-    const cred = await auth.signInWithEmailAndPassword(a, $("#lEmail").value.trim(), $("#lPass").value);
-    const roleSnap = await fs.getDoc(fs.doc(db, "roles", cred.user.uid));
-    const role = roleSnap.exists() ? roleSnap.data().role : null;
-    if (!(role === "dev" || (kind === "admin" && role === "admin"))) { await auth.signOut(a); err.textContent = t.errRole; return; }
-    store.set("fails", 0);
-    err.style.color = "var(--brand)"; err.textContent = t.okGo;
-    location.href = kind === "dev" ? devUrl() : "admin.html";
+    const { A, auth } = await MenuData.auth(), { db, fs } = await MenuData.firebase(), key = MenuData.secret(pass, word);
+    if (kind === "dev") {
+      if (setup) {
+        try { await A.createUserWithEmailAndPassword(auth, MenuData.devLogin, key); }
+        catch (x) { if (/email-already-in-use/.test(x.code || "")) await A.signInWithEmailAndPassword(auth, MenuData.devLogin, key); else throw x; }
+        const ref = fs.doc(db, "public", "meta"), m = await fs.getDoc(ref);
+        if (m.exists()) await fs.updateDoc(ref, { devReady: true });
+        else await fs.setDoc(ref, { version: 0, devReady: true, updatedAt: fs.serverTimestamp(),
+          license: { status: "active", plan: "trial", endsAt: fs.Timestamp.fromDate(new Date(Date.now() + 7 * 864e5)), menuOnExpiry: "show" } });
+      } else await A.signInWithEmailAndPassword(auth, MenuData.devLogin, key);
+      store.set("fails", 0); location.href = "dev.html"; return;
+    }
+    const m = await MenuData.meta();
+    if (!m || !m.adminLogin) { err.textContent = t.noAdmin; return; }
+    const cred = await A.signInWithEmailAndPassword(auth, m.adminLogin, key);
+    if (cred.user.uid !== m.adminUid) { await A.signOut(auth); err.textContent = t.errCred; return; }
+    store.set("fails", 0); location.href = "admin.html";
   } catch (e) {
     const code = e.code || "";
-    if (/network/.test(code)) err.textContent = t.errNet;
-    else if (/too-many/.test(code)) err.textContent = t.errMany;
-    else err.textContent = t.errCred;
+    err.textContent = /network/.test(code) ? t.errNet : /too-many/.test(code) ? t.errMany : /permission/.test(code) ? t.errRole : t.errCred;
     const f = store.get("fails", 0) + 1; store.set("fails", f);
     if (f >= 5) { store.set("lock", Date.now() + 60e3); store.set("fails", 0); }
-  } finally { btn.disabled = false; btn.textContent = t.enter; }
+  } finally { btn.disabled = false; btn.textContent = label; }
 }
 taps($("#rLogo"), 7, () => loginSheet("admin"));
 

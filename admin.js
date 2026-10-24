@@ -90,7 +90,9 @@ function markDirty() {
   $("#publishBtn").disabled = !n || !licOk(); $("#dirtyN").hidden = !n; $("#dirtyN").textContent = fmt(n);
 }
 
-/* ═════════ boot / auth ═════════ */
+/* ═════════ boot / auth ═════════
+   الصفحة دي مخفية: الدخول بيحصل من المنيو (٧ ضغطات على اللوجو). لو مفيش دخول، بترجع للمنيو. */
+const toMenu = () => location.replace("./");
 async function boot() {
   if (C.useSample) {
     user = { email: "demo@urcod" }; role = "admin";
@@ -100,44 +102,26 @@ async function boot() {
   try {
     FB = await MenuData.firebase(); A = await import(SDK("firebase-auth"));
     auth = A.getAuth(FB.app);
-    A.onAuthStateChanged(auth, u => u ? afterLogin(u) : showLogin());
-  } catch (e) { showLogin(); $("#lErr").textContent = "مفيش اتصال. اتأكد من النت وافتح الصفحة تاني."; }
+    A.onAuthStateChanged(auth, u => u ? afterLogin(u) : toMenu());
+  } catch (e) { showLogin("مفيش اتصال. اتأكد من النت وافتح الصفحة تاني."); }
 }
-function showLogin() { $("#top").hidden = $("#tabs").hidden = true; $("#view").innerHTML = ""; $("#loginBox").hidden = false; setTimeout(() => $("#lEmail").focus(), 100); }
-$("#loginF").onsubmit = async e => {
-  e.preventDefault(); const err = $("#lErr"), b = $("#lBtn");
-  if (C.useSample) return;
-  const lock = store.get("lock", 0); if (Date.now() < lock) { err.textContent = "محاولات كتير. استنى دقيقة وجرّب تاني."; return; }
-  b.disabled = true; b.textContent = "جاري الدخول…"; err.textContent = "";
-  try { await A.signInWithEmailAndPassword(auth, $("#lEmail").value.trim(), $("#lPass").value); store.set("fails", 0); }
-  catch (x) {
-    err.textContent = /network/.test(x.code) ? "مفيش اتصال. اتأكد من النت." : /too-many/.test(x.code) ? "محاولات كتير. استنى شوية." : "البريد أو كلمة المرور غلط.";
-    const f = store.get("fails", 0) + 1; store.set("fails", f); if (f >= 5) { store.set("lock", Date.now() + 6e4); store.set("fails", 0); }
-  } finally { b.disabled = false; b.textContent = "دخول"; }
-};
-$("#resetBtn").onclick = async () => {
-  const em = $("#lEmail").value.trim(); if (!em) { $("#lErr").textContent = "اكتب بريدك الأول، وبعدين دوس «نسيت كلمة المرور»."; return; }
-  if (C.useSample) return;
-  try { await A.sendPasswordResetEmail(auth, em); } catch {}
-  $("#lErr").style.color = "var(--good)"; $("#lErr").textContent = "لو البريد ده مسجّل، هيوصلك رابط تغيير كلمة المرور.";
-};
+function showLogin(msg) { $("#top").hidden = $("#tabs").hidden = true; $("#view").innerHTML = `<div class="card login"><p class="err">${esc(msg)}</p><a class="btn" href="./">رجوع للمنيو</a></div>`; }
 async function afterLogin(u) {
   const { db, fs } = FB;
   try {
-    const r = await fs.getDoc(fs.doc(db, "roles", u.uid));
-    role = r.exists() ? r.data().role : null;
-    if (role !== "admin" && role !== "dev") { await A.signOut(auth); showLogin(); $("#lErr").textContent = "الحساب ده مالوش صلاحية إدارة المنيو."; return; }
-    user = u;
     const [m, mm] = await Promise.all([fs.getDoc(fs.doc(db, "public", "meta")), fs.getDoc(fs.doc(db, "public", "menu"))]);
     meta = m.exists() ? MenuData.plain(m.data()) : { version: 0, license: null };
+    role = (u.email || "").toLowerCase() === MenuData.devLogin ? "dev" : (meta.adminUid && u.uid === meta.adminUid) ? "admin" : null;
+    if (!role) { await A.signOut(auth); return toMenu(); }
+    user = u;
     menu = mm.exists() ? MenuData.plain(mm.data()) : clone(window.SAMPLE_MENU);
     delete menu.updatedAt; base = JSON.stringify(menu);
     start();
-  } catch (e) { showLogin(); $("#lErr").textContent = "حصلت مشكلة في التحميل. جرّب تاني."; console.error(e); }
+  } catch (e) { showLogin("حصلت مشكلة في التحميل. جرّب تاني."); console.error(e); }
 }
 $("#logoutBtn").onclick = async () => {
   if (changeCount() && !await confirmBox("فيه تعديلات لسه ماتنشرتش", "التعديلات هتفضل محفوظة على الجهاز ده، وتقدر تكمّلها لما تدخل تاني.", "خروج")) return;
-  if (auth) await A.signOut(auth); else location.reload();
+  if (auth) await A.signOut(auth); toMenu();
 };
 function ensureShape() {
   menu.categories ||= []; menu.products ||= []; menu.ads ||= []; menu.brand ||= {}; menu.settings ||= {}; menu.contact ||= {};
@@ -151,7 +135,7 @@ function start() {
   const d = store.get("draft", null);
   restoreOffer = d && d.version === meta.version && JSON.stringify(d.menu) !== base ? d : null;
   if (d && d.version !== meta.version) store.del("draft");
-  $("#loginBox").hidden = true; $("#top").hidden = $("#tabs").hidden = false;
+  $("#top").hidden = $("#tabs").hidden = false;
   $("#rName").textContent = L(menu.brand.name) || "المنيو";
   licLine(); markDirty(); go(store.get("tab", "home"));
 }

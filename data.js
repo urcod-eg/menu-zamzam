@@ -68,5 +68,19 @@ window.MenuData = (function () {
     }
   }
 
-  return { load, firebase, plain };
+  /* حسابات الدخول داخلية (مش بريد حقيقي): المستخدم بيكتب كلمة سر + كلمة أمان بس */
+  const devLogin = ("dev." + C.clientId + "@urcod.app").toLowerCase();
+  const secret = (pass, word) => String(pass) + "::" + String(word).trim();
+  async function auth() {
+    const { app } = await firebase();
+    const A = await import(SDK("firebase-auth"));
+    return { A, auth: A.getAuth(app) };
+  }
+  async function meta() {
+    const { db, fs } = await firebase();
+    const m = await fs.getDoc(fs.doc(db, "public", "meta"));
+    return m.exists() ? plain(m.data()) : null;
+  }
+
+  return { load, firebase, plain, devLogin, secret, auth, meta };
 })();

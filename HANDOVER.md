@@ -1,22 +1,16 @@
 # تسليم زمزم (menu-zamzam)
 
 ## اتعمل تلقائيًا
-- [x] config.js: المعرّف، إعدادات Firebase (menu-zamzam)، رابط لوحة المطوّر
-- [x] firestore.rules: بريد المطوّر urcod.eg@gmail.com
-- [x] manifest + عنوان الصفحة + لون green
+- [x] config.js + إعدادات Firebase (menu-zamzam)
+- [x] firestore.rules (حساب المطوّر: dev.menu-zamzam@urcod.app)
+- [x] الاسم واللون في الصفحات والـ manifest
 - [ ] الأيقونات من اللوجو
-- [x] رقم إصدار الـ service worker
 
 ## فاضل
-- [ ] Firestore (Production) + Authentication بالبريد
-- [ ] Authentication › Authorized domains › ضيف دومين GitHub Pages
+- [ ] Firestore Database (Production) + Authentication › Email/Password
+- [ ] Authentication › Settings › Authorized domains › urcod-eg.github.io
 - [ ] Firestore › Rules › الصق firestore.rules › Publish
-- [ ] ارفع المجلد على repo جديد وفعّل GitHub Pages
-- [ ] لوحة المطوّر › عميل › الصق إعدادات Firebase › حفظ
-- [ ] لوحة المطوّر › دخول المشروع › «اعمل حساب المطوّر» › أكّد البريد
-- [ ] المنيو › رفع المنيو التجريبي
-- [ ] الترخيص › +٧ أيام تجربة (أو الخطة المتفق عليها)
-- [ ] الحسابات › بريد صاحب المطعم
-- [ ] (اختياري) repo صور + token › الصور
-- [ ] افتح المنيو على الموبايل، ونزّله على الشاشة الرئيسية، واتأكد من الاسم والأيقونة
-- [ ] صاحب المطعم يدخل admin.html، يعدّل حاجة وينشر
+- [ ] repo جديد (Public) › ارفع كل الملفات › Settings › Pages › main
+- [ ] افتح المنيو › «صُنع بواسطة URCOD» › ١٠ ضغطات على لوجو URCOD › اختار كلمة سر وكلمة أمان للمطوّر (أول مرة بس) — اعمله على طول بعد الرفع
+- [ ] صفحة المطوّر: الهوية › حفظ، الترخيص، واتساب صاحب المطعم › توليد › إنشاء حساب الإدارة › إرسال واتساب
+- [ ] صاحب المطعم: ٧ ضغطات على لوجو المطعم › كلمة السر + كلمة الأمان
