@@ -45,8 +45,12 @@ const I = {
   warn: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17h.01"/></svg>',
   info: '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>',
   dl: '<svg class="ic" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M5 20h14"/></svg>',
-  sheet: '<svg class="ic" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>'
+  sheet: '<svg class="ic" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>',
+  edit: '<svg class="ic" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>',
+  trash: '<svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>'
 };
+/* زراير تعديل وحذف واضحة في كل صف */
+const rowActs = (kind, id, name) => `<div class="acts"><button class="ib" data-act="edit${kind}" data-id="${id}" aria-label="تعديل ${esc(name)}" title="تعديل">${I.edit}</button><button class="ib del" data-act="del${kind}" data-id="${id}" aria-label="حذف ${esc(name)}" title="حذف">${I.trash}</button></div>`;
 
 /* ═════════ state ═════════ */
 let FB = null, A = null, auth = null, user = null, role = null;
@@ -202,6 +206,7 @@ function catRow(c, i, isSub, siblings) {
   return `<div class="item ${isSub ? "sub" : ""} ${c.available === false || c.hidden ? "off" : ""}" style="--i:${i}">
     <div class="order"><button data-act="catUp" data-id="${c.id}" aria-label="لفوق" ${idx === 0 ? "disabled" : ""}>${I.up}</button><button data-act="catDown" data-id="${c.id}" aria-label="لتحت" ${idx === siblings.length - 1 ? "disabled" : ""}>${I.down}</button></div>
     <div class="t" data-act="editCat" data-id="${c.id}"><b>${esc(L(c.name)) || "بدون اسم"}</b><small>${isSub ? "قسم فرعي" : "قسم رئيسي"} · ${fmt(n)} صنف${c.hidden ? " · مخفي" : ""}${c.available === false ? " · متوقف" : ""}</small></div>
+    ${rowActs("Cat", c.id, L(c.name))}
     <button class="switch" role="switch" aria-checked="${c.available !== false}" aria-label="متاح" data-act="catAvail" data-id="${c.id}"></button>
   </div>`;
 }
@@ -237,16 +242,28 @@ function catEditor(id) {
       closeSheet(); markDirty(); render(); toast(isNew ? "القسم اتضاف" : "التعديل اتطبّق");
     }]]);
 }
-function deleteCat(id) {
+function deleteItem(id, fromEditor) {
+  const p = menu.products.find(x => x.id === id); if (!p) return;
+  confirmBox("حذف «" + (L(p.name) || "الصنف") + "»؟", "الحذف نهائي ومفيش سلة محذوفات. (بيبان للزبون بعد «نشر التعديلات»)", "حذف").then(ok => {
+    if (!ok) return fromEditor ? itemEditor(id) : undefined;
+    forgetImage(p.image); menu.products = menu.products.filter(x => x.id !== id); markDirty(); render(); toast("الصنف اتمسح"); });
+}
+function deleteAd(id, fromEditor) {
+  const a = menu.ads.find(x => x.id === id); if (!a) return;
+  confirmBox("حذف الإعلان؟", "الحذف نهائي.", "حذف").then(ok => {
+    if (!ok) return fromEditor ? adEditor(id) : undefined;
+    forgetImage(a.image); menu.ads = menu.ads.filter(x => x.id !== id); markDirty(); render(); toast("الإعلان اتمسح"); });
+}
+function deleteCat(id, fromRow) {
   const c = catById(id), subs = subsOf(id), items = (menu.products || []).filter(p => p.categoryId === id);
-  if (subs.length) return void ($("#cErr").textContent = "جوه القسم ده أقسام فرعية. انقلها أو امسحها الأول.");
+  if (subs.length) { const m = "جوه القسم ده أقسام فرعية. انقلها أو امسحها الأول."; return void ($("#cErr") && !fromRow ? $("#cErr").textContent = m : toast(m, true)); }
   const others = cats().filter(x => x.id !== id);
   sheet("حذف «" + (L(c.name) || "القسم") + "»", `<div class="form">
     ${items.length ? `<p>جوه القسم ده ${fmt(items.length)} صنف. تحب تعمل فيهم إيه؟</p>
       <div class="seg" id="dMode"><button type="button" aria-pressed="true" data-v="move">أنقلهم لقسم تاني</button><button type="button" aria-pressed="false" data-v="del">أمسحهم معاه</button></div>
       <label class="f" id="dTo">ينقلوا لـ<select class="in" id="dTarget">${others.map(o => `<option value="${o.id}">${esc(catPath(o.id))}</option>`).join("")}</select></label>` : `<p>القسم فاضي. الحذف نهائي ومفيش سلة محذوفات.</p>`}
     <p class="err" id="dErr"></p></div>`,
-    [["رجوع", "", () => catEditor(id)], ["حذف نهائي", "danger", () => {
+    [["رجوع", "", () => fromRow ? closeSheet() : catEditor(id)], ["حذف نهائي", "danger", () => {
       if (items.length) {
         const mode = $("#dMode [aria-pressed=true]").dataset.v;
         if (mode === "move") { if (!others.length) return void ($("#dErr").textContent = "مفيش قسم تاني تنقل له."); const to = $("#dTarget").value; items.forEach(p => p.categoryId = to); }
@@ -266,6 +283,7 @@ function itemRow(p, i) {
     <div class="t" data-act="editItem" data-id="${p.id}"><b>${esc(L(p.name)) || "بدون اسم"}</b>
       <small>${priceSummary(p)} ${esc(L(menu.settings.currency) || "ج.م")} · ${esc(catPath(p.categoryId))}</small>
       <span class="row" style="gap:4px;margin-top:2px">${os && os !== "draft" ? pill(os) : ""}${p.isNew ? '<span class="pill new">جديد</span>' : ""}${p.featured ? '<span class="pill scheduled">الأكثر طلبًا</span>' : ""}</span></div>
+    ${rowActs("Item", p.id, L(p.name))}
     <button class="switch" role="switch" aria-checked="${p.available !== false}" aria-label="متاح" data-act="itemAvail" data-id="${p.id}"></button>
   </div>`;
 }
@@ -355,8 +373,7 @@ function itemEditor(id, catId) {
       </div>
     </fieldset>
     <p class="err" id="pErr"></p></div>`,
-    [isNew ? null : ["حذف", "danger", () => confirmBox("حذف «" + (L(p.name) || "الصنف") + "»؟", "الحذف نهائي ومفيش سلة محذوفات.", "حذف").then(ok => {
-      if (!ok) return itemEditor(id); forgetImage(p.image); menu.products = menu.products.filter(x => x.id !== p.id); markDirty(); render(); toast("الصنف اتمسح"); })],
+    [isNew ? null : ["حذف", "danger", () => deleteItem(id, true)],
      ["تطبيق", "primary", () => applyItem(p, isNew)]]);
 
   const showType = v => { $("#pSingle").hidden = v !== "single"; $("#pVars").hidden = v !== "variants"; offerPrices(); preview(); };
@@ -455,6 +472,7 @@ function adsView() {
     <div class="order"><button data-act="adUp" data-id="${a.id}" ${i === 0 ? "disabled" : ""} aria-label="لفوق">${I.up}</button><button data-act="adDown" data-id="${a.id}" ${i === list.length - 1 ? "disabled" : ""} aria-label="لتحت">${I.down}</button></div>
     <div class="thumb" style="background:${a.image ? "var(--soft)" : (AD_THEMES.find(t => t[0] === a.theme) || AD_THEMES[0])[1]}">${a.image ? thumbHTML(a.image) : ""}</div>
     <div class="t" data-act="editAd" data-id="${a.id}"><b>${esc(L(a.title)) || "بدون عنوان"}</b><small>${esc(L(a.kicker))}</small><span>${pill(adStatus(a))}</span></div>
+    ${rowActs("Ad", a.id, L(a.title))}
     <button class="switch" role="switch" aria-checked="${a.enabled !== false}" aria-label="ظاهر" data-act="adOn" data-id="${a.id}"></button></div>`).join("")}</div>` : `<div class="empty">مفيش إعلانات.</div>`}`;
 }
 function adEditor(id) {
@@ -475,7 +493,7 @@ function adEditor(id) {
       <label class="f">ينتهي<input class="in" id="aEnd" type="datetime-local" value="${toLocal(a.endAt)}"><small>فاضي = لحد ما توقفه</small></label></div>
       ${sw("aOn", a.enabled !== false, "ظاهر", "")}
     </fieldset><p class="err" id="aErr"></p></div>`,
-    [isNew ? null : ["حذف", "danger", () => confirmBox("حذف الإعلان؟", "الحذف نهائي.", "حذف").then(ok => { if (!ok) return adEditor(id); forgetImage(a.image); menu.ads = menu.ads.filter(x => x.id !== a.id); markDirty(); render(); toast("الإعلان اتمسح"); })],
+    [isNew ? null : ["حذف", "danger", () => deleteAd(id, true)],
      ["تطبيق", "primary", () => {
       a.kicker = { ar: $("#aKAr").value.trim(), en: $("#aKEn").value.trim() }; a.title = { ar: $("#aTAr").value.trim(), en: $("#aTEn").value.trim() };
       a.body = { ar: $("#aBAr").value.trim(), en: $("#aBEn").value.trim() };
@@ -733,6 +751,9 @@ document.addEventListener("click", e => {
     case "sw": flip(); break;
     case "newItem": itemEditor(null); break;
     case "editItem": itemEditor(id); break;
+    case "delItem": deleteItem(id); break;
+    case "delCat": deleteCat(id, true); break;
+    case "delAd": deleteAd(id); break;
     case "itemAvail": { const p = menu.products.find(x => x.id === id); p.available = flip(); el.closest(".item").classList.toggle("off", !p.available); markDirty(); toast(p.available ? "اتعمل متاح" : "اتعمل غير متاح"); break; }
     case "newCat": catEditor(null); break;
     case "editCat": catEditor(id); break;

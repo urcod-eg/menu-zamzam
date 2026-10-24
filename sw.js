@@ -1,7 +1,7 @@
 /* Service worker — بيخزّن ملفات الواجهة بس (مش بيانات المنيو).
    بيانات المنيو بتتخزن في localStorage وبتتحدّث برقم الإصدار، فمفيش خطر أسعار قديمة من هنا.
    غيّر VERSION مع كل رفع جديد للواجهة على GitHub. */
-const VERSION = "menu-zamzam-v2.2.0";
+const VERSION = "menu-zamzam-v2.2.1";
 const SHELL = [
   "./", "index.html", "app.js", "data.js", "config.js", "sample-menu.js", "admin.html", "admin.js", "dev.html", "devpage.js", "qr.js", "excel.js", "templates/menu-template.xlsx",
   "manifest.webmanifest", "assets/urcod-logo.jpg",
