@@ -1,0 +1,105 @@
+rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────
+// URCOD Digital Menu — قواعد الأمان (خطة Spark المجانية، من غير Cloud Functions)
+//
+// الهيكل:
+//   public/meta      { version, updatedAt, license{status, plan, endsAt, menuOnExpiry} }  ← الكل يقرا
+//   public/menu      { schemaVersion, brand, settings, contact, categories, products, ads } ← الكل يقرا
+//   roles/{uid}      { role: "admin" | "dev" }                                              ← المطور بس يكتب
+//   private/devNotes { ... }                                                                 ← المطور بس
+//   auditLogs/{id}   { uid, action, target, at }                                             ← إضافة فقط
+//
+// الترخيص بيتفحص بوقت السيرفر (request.time) مش بساعة الجهاز.
+// ─────────────────────────────────────────────────────────────
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function roleIs(r) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/roles/$(request.auth.uid))
+        && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.role == r;
+    }
+    function isDev()   { return roleIs('dev'); }
+    function isAdmin() { return roleIs('admin'); }
+
+    function metaPath() { return /databases/$(database)/documents/public/meta; }
+    function licenseOk() {
+      let l = get(metaPath()).data.license;
+      return l.status == 'active' && (l.endsAt == null || l.endsAt > request.time);
+    }
+    // كل حفظ للمنيو لازم يرفع رقم الإصدار في نفس الـ batch، عشان كاش الأجهزة يتحدّث
+    function bumpsVersion() {
+      return getAfter(metaPath()).data.version == get(metaPath()).data.version + 1;
+    }
+    function menuShapeOk() {
+      return request.resource.data.keys().hasOnly(
+        ['schemaVersion', 'brand', 'settings', 'contact', 'categories', 'products', 'ads', 'updatedAt'])
+        && request.resource.data.categories is list
+        && request.resource.data.products is list
+        && request.resource.data.products.size() <= 600
+        && request.resource.data.categories.size() <= 120;
+    }
+
+    // ── المنيو العام ──
+    match /public/menu {
+      allow read: if true;
+      allow create, update: if isDev()
+        || (isAdmin() && licenseOk() && menuShapeOk() && bumpsVersion());
+      allow delete: if isDev();
+    }
+
+    // ── الإصدار + الترخيص ──
+    match /public/meta {
+      allow read: if true;
+      allow create, delete: if isDev();
+      // المطور: أي تعديل (منه الترخيص)
+      // الأدمن: يرفع الإصدار بواحد بس، ومايقربش من الترخيص
+      allow update: if isDev()
+        || (isAdmin() && licenseOk()
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['version', 'updatedAt'])
+            && request.resource.data.version == resource.data.version + 1
+            && request.resource.data.updatedAt == request.time);
+    }
+
+    // ── الصلاحيات ──
+    match /roles/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isDev());
+      allow write: if isDev();
+      // تفعيل المطور لأول مرة من لوحة المطور، من غير Console:
+      // بريد URCOD بس، وبعد ما يتأكد من البريد، ويقدر يدّي نفسه dev بس.
+      // urcod.eg@gmail.com بيتبدّل تلقائيًا بسكريبت tools/new_client.py
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.auth.token.email == 'urcod.eg@gmail.com'
+        && request.auth.token.email_verified == true
+        && request.resource.data.role == 'dev';
+    }
+
+    // ── ملاحظات المطور الخاصة ──
+    match /private/{doc} {
+      allow read, write: if isDev();
+    }
+
+    // ── إعدادات رفع الصور (secure/github): الأدمن يقرا عشان يرفع، المطور بس يكتب ──
+    match /secure/{doc} {
+      allow read: if isDev() || (isAdmin() && licenseOk());
+      allow write: if isDev();
+    }
+
+    // ── سجل العمليات: إضافة فقط، ممنوع التعديل والحذف ──
+    match /auditLogs/{id} {
+      allow create: if (isAdmin() || isDev())
+        && request.resource.data.keys().hasOnly(['uid', 'action', 'target', 'at', 'note'])
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.at == request.time;
+      allow read: if isDev();
+      allow update, delete: if false;
+    }
+
+    // أي حاجة تانية مقفولة
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
