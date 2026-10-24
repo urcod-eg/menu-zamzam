@@ -434,7 +434,8 @@ svg{display:block}
 /* real product photos sit over the icon fallback */
 .thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity var(--t-slow) var(--ease-out)}
 .thumb img.ok{opacity:1}
-.logo img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.logo img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+.logo:has(img){background:var(--surface);box-shadow:0 0 0 1px var(--line)}
 .ad.has-img{background-size:cover!important;background-position:center!important}
 .ad.has-img::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.05),rgba(0,0,0,.6))}
 [dir="ltr"] .ad.has-img::before{background:linear-gradient(270deg,rgba(0,0,0,.05),rgba(0,0,0,.6))}

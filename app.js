@@ -438,7 +438,12 @@ $("#langBtn").onclick = e => { lang = lang === "ar" ? "en" : "ar"; store.set("la
 /* ═════════ about pages ═════════ */
 const bar = (id, title) => `<div class="page-bar"><button class="icon-btn back" data-close aria-label="${T[lang].back}">${I.back}</button><h2 id="${id}T">${title}</h2></div>`;
 const crow = (ic, label, val) => `<div class="row">${ic}<div class="v"><small>${label}</small><span class="ltr">${esc(val)}</span></div><button class="copy" data-copy="${esc(val)}">${T[lang].copy}</button></div>`;
-function logoHTML() { const b = M.brand || {}; return b.logoUrl && safeUrl(b.logoUrl) ? `<img src="${esc(b.logoUrl)}" alt="">` : esc(L(b.initial) || (L(b.name) || "•").trim()[0]); }
+/* لوجو المطعم: الرابط من الإعدادات، وإلا أيقونة التطبيق نفسها (icons/icon-192.png)، وإلا أول حرف من الاسم */
+function logoHTML() {
+  const b = (M && M.brand) || {}, letter = esc(L(b.initial) || (L(b.name) || "•").trim()[0]);
+  const src = b.logoUrl && safeUrl(b.logoUrl) ? esc(b.logoUrl) : "icons/icon-192.png";
+  return `<img src="${src}" alt="" onerror="this.replaceWith(document.createTextNode('${letter.replace(/'/g, "")}'))">`;
+}
 function pages() {
   const t = T[lang], b = M.brand || {}, c = M.contact || {}, today = new Date().getDay();
   const maps = safeUrl(c.mapsUrl), wa = (c.whatsapp || "").replace(/\D/g, "");
@@ -589,7 +594,7 @@ function render() {
 /* ═════════ boot ═════════ */
 lang = lang || "ar"; root.lang = lang; root.dir = lang === "ar" ? "rtl" : "ltr";
 const savedTheme = store.get("theme", null); if (savedTheme) root.dataset.theme = savedTheme;
-syncTheme(); skeleton();
+syncTheme(); skeleton(); $("#rLogo").innerHTML = logoHTML();
 let first = true;
 MenuData.load(res => {
   if (res.error || res.empty) { M = M || { brand: {}, settings: {}, contact: {} }; if (!ALL.length) { lang = lang || "ar"; pages(); stateScreen(res.error ? "offline" : "empty"); } return; }
