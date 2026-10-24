@@ -66,7 +66,7 @@ const T = {
   install:"تثبيت التطبيق",installSub:"افتح المنيو من الشاشة الرئيسية",installT:"نزّل المنيو على موبايلك",installP:"يفتح أسرع، ومن غير ما تدوّر على اللينك.",installGo:"تثبيت",
   installed:"التطبيق اتثبّت على موبايلك.",iosT:"تثبيت المنيو على الآيفون",ios1:"دوس على زرار المشاركة {i} تحت في Safari",ios2:"اختار «إضافة إلى الشاشة الرئيسية» (Add to Home Screen)",ios3:"دوس «إضافة»، وهتلاقي المنيو جنب تطبيقاتك",
   adminLogin:"دخول إدارة المطعم",devLogin:"دخول المطوّر",email:"البريد الإلكتروني",pass:"كلمة السر",word:"كلمة الأمان",passAgain:"كلمة السر تاني",
-  setupTitle:"تجهيز النسخة لأول مرة",setupHint:"اختار كلمة سر وكلمة أمان للمطوّر. هتدخل بيهم بعد كده بـ ١٠ ضغطات على لوجو URCOD.",setupGo:"تجهيز ودخول",
+  setupTitle:"تجهيز النسخة لأول مرة",setupHint:"اختار كلمة سر وكلمة أمان للمطوّر. هتدخل بيهم بعد كده بـ ١٠ ضغطات على لوجو URCOD.",setupGo:"تجهيز ودخول",errTaken:"حساب المطوّر للنسخة دي معمول قبل كده بكلمة سر تانية. لو مش إنت اللي عملته: امسحه من Firebase › Authentication › Users وجرّب تاني.",errSetupShort:"لحساب المطوّر: كلمة السر ٨ حروف على الأقل، وكلمة الأمان ٤.",
   errShort:"كلمة السر ٦ حروف على الأقل، وكلمة الأمان ٣ على الأقل.",errMatch:"كلمتين السر مش زي بعض.",noAdmin:"لسه مفيش حساب إدارة للمطعم ده. كلّم URCOD.",enter:"دخول",entering:"جاري الدخول…",
   closedT:"المنيو مش متاح دلوقتي",closedP:"المطعم هيرجّع المنيو قريب. تقدر تتواصل معاهم من «عن المطعم».",
   offlineT:"مفيش اتصال بالإنترنت",offlineP:"أول مرة المنيو محتاج إنترنت عشان يتحمّل. بعد كده هيفتح حتى من غير نت.",
@@ -92,7 +92,7 @@ const T = {
   install:"Install the app",installSub:"Open the menu from your home screen",installT:"Add the menu to your phone",installP:"Opens faster, no need to look for the link.",installGo:"Install",
   installed:"The app is installed.",iosT:"Install on iPhone",ios1:"Tap the Share button {i} at the bottom of Safari",ios2:"Choose \u201cAdd to Home Screen\u201d",ios3:"Tap \u201cAdd\u201d. The menu now sits with your apps",
   adminLogin:"Restaurant admin login",devLogin:"Developer login",email:"Email",pass:"Password",word:"Security word",passAgain:"Password again",
-  setupTitle:"First-time setup",setupHint:"Choose the developer password and security word. You'll use them with 10 taps on the URCOD logo.",setupGo:"Set up and sign in",
+  setupTitle:"First-time setup",setupHint:"Choose the developer password and security word. You'll use them with 10 taps on the URCOD logo.",setupGo:"Set up and sign in",errTaken:"The developer account already exists with another password. If it wasn't you, delete it in Firebase › Authentication › Users and try again.",errSetupShort:"Developer account: password at least 8 characters, security word at least 4.",
   errShort:"Password needs 6+ characters and the security word 3+.",errMatch:"The passwords don't match.",noAdmin:"No admin account yet. Contact URCOD.",enter:"Sign in",entering:"Signing in…",
   closedT:"The menu is not available right now",closedP:"The restaurant will bring it back soon. You can still reach them from About us.",
   offlineT:"No internet connection",offlineP:"The menu needs the internet the first time. After that it opens offline too.",
@@ -488,7 +488,10 @@ function openBadge() {
   const el = $("#ostat"), st = M && openState(); if (!el) return;
   if (!st) { el.hidden = true; return; }
   const t = T[lang]; el.hidden = false; el.className = "ostat " + (st.open ? "on" : "off");
-  el.textContent = st.open ? t.openNow + (st.at ? " · " + t.closesAt.replace("{t}", clock12(st.at)) : "") : t.closedNow + (st.at ? " · " + t.opensAt.replace("{t}", clock12(st.at)) : "");
+  const more = st.at ? (st.open ? t.closesAt : t.opensAt).replace("{t}", clock12(st.at)) : "";
+  el.textContent = st.open ? t.openNow : t.closedNow;
+  if (more) { const s = document.createElement("i"); s.className = "os-more"; s.textContent = " · " + more; el.appendChild(s); }
+  el.title = el.textContent;
 }
 setInterval(openBadge, 60000);
 function pages() {
@@ -555,6 +558,7 @@ async function signIn(kind, setup) {
   if (C.useSample) { err.textContent = t.loginSample; return; }
   const pass = $("#lPass").value, word = $("#lWord").value.trim();
   if (pass.length < 6 || word.length < 3) { err.textContent = t.errShort; return; }
+  if (setup && (pass.length < 8 || word.length < 4)) { err.textContent = t.errSetupShort; return; }
   if (setup && pass !== $("#lPass2").value) { err.textContent = t.errMatch; return; }
   btn.disabled = true; btn.textContent = t.entering; err.textContent = "";
   try {
@@ -562,7 +566,9 @@ async function signIn(kind, setup) {
     if (kind === "dev") {
       if (setup) {
         try { await A.createUserWithEmailAndPassword(auth, MenuData.devLogin, key); }
-        catch (x) { if (/email-already-in-use/.test(x.code || "")) await A.signInWithEmailAndPassword(auth, MenuData.devLogin, key); else throw x; }
+        catch (x) { if (!/email-already-in-use/.test(x.code || "")) throw x;
+          try { await A.signInWithEmailAndPassword(auth, MenuData.devLogin, key); }
+          catch { err.textContent = t.errTaken; return; } }
         const ref = fs.doc(db, "public", "meta"), m = await fs.getDoc(ref);
         if (m.exists()) await fs.updateDoc(ref, { devReady: true });
         else await fs.setDoc(ref, { version: 0, devReady: true, updatedAt: fs.serverTimestamp(),

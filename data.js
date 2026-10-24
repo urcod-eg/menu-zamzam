@@ -58,7 +58,12 @@ window.MenuData = (function () {
         }
         return;
       }
-      const menuSnap = await fs.getDoc(fs.doc(db, "public", "menu"));          /* قراءة ٢ (بس لما يتغيّر) */
+      let menuSnap;
+      try { menuSnap = await fs.getDoc(fs.doc(db, "public", "menu")); }       /* قراءة ٢ (بس لما يتغيّر) */
+      catch (e) {   /* الترخيص خلص والمنيو مقفول من السيرفر: نشيل النسخة القديمة ونعرض «المنيو مش متاح» */
+        if (!/permission/.test(e.code || "")) throw e;
+        const out = { meta, menu: {} }; set(KEY, JSON.stringify(out)); onData(Object.assign({}, out, { source: "net" })); return;
+      }
       const out = { meta, menu: plain(menuSnap.exists() ? menuSnap.data() : {}) };
       set(KEY, JSON.stringify(out));
       onData(Object.assign({}, out, { source: "net", updated: !!cached }));

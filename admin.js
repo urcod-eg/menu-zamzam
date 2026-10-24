@@ -113,7 +113,9 @@ function showLogin(msg) { $("#top").hidden = $("#tabs").hidden = true; $("#view"
 async function afterLogin(u) {
   const { db, fs } = FB;
   try {
-    const [m, mm] = await Promise.all([fs.getDoc(fs.doc(db, "public", "meta")), fs.getDoc(fs.doc(db, "public", "menu"))]);
+    const m = await fs.getDoc(fs.doc(db, "public", "meta"));
+    let mm; try { mm = await fs.getDoc(fs.doc(db, "public", "menu")); }
+    catch (e) { if (/permission/.test(e.code || "")) return showLogin("الترخيص انتهى والمنيو متقفل. كلّم URCOD عشان تجدّد."); throw e; }
     meta = m.exists() ? MenuData.plain(m.data()) : { version: 0, license: null };
     role = (u.email || "").toLowerCase() === MenuData.devLogin ? "dev" : (meta.adminUid && u.uid === meta.adminUid) ? "admin" : null;
     if (!role) { await A.signOut(auth); return toMenu(); }
