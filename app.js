@@ -59,6 +59,8 @@ const T = {
   urcodAbout:"URCOD بتبني أنظمة جاهزة ومخصّصة للمطاعم والشركات، شغالة على الموبايل والكمبيوتر، وكل عميل بياخد نسخة بهويته.",
   devT:"المطوّر",sysT:"أنظمتنا",sys:["المنيو الإلكتروني","إدارة المطاعم","إدارة الجيم","المرتبات والحضور","ERP عملاء ومخازن","مواقع احترافية"],
   getCopy:"عايز نسخة لمطعمك أو نظام مخصّص؟",ver:"الإصدار",
+  install:"تثبيت التطبيق",installSub:"افتح المنيو من الشاشة الرئيسية",installT:"نزّل المنيو على موبايلك",installP:"يفتح أسرع، ومن غير ما تدوّر على اللينك.",installGo:"تثبيت",
+  installed:"التطبيق اتثبّت على موبايلك.",iosT:"تثبيت المنيو على الآيفون",ios1:"دوس على زرار المشاركة {i} تحت في Safari",ios2:"اختار «إضافة إلى الشاشة الرئيسية» (Add to Home Screen)",ios3:"دوس «إضافة»، وهتلاقي المنيو جنب تطبيقاتك",
   adminLogin:"دخول إدارة المطعم",devLogin:"دخول المطوّر",email:"البريد الإلكتروني",pass:"كلمة السر",word:"كلمة الأمان",passAgain:"كلمة السر تاني",
   setupTitle:"تجهيز النسخة لأول مرة",setupHint:"اختار كلمة سر وكلمة أمان للمطوّر. هتدخل بيهم بعد كده بـ ١٠ ضغطات على لوجو URCOD.",setupGo:"تجهيز ودخول",
   errShort:"كلمة السر ٦ حروف على الأقل، وكلمة الأمان ٣ على الأقل.",errMatch:"كلمتين السر مش زي بعض.",noAdmin:"لسه مفيش حساب إدارة للمطعم ده. كلّم URCOD.",enter:"دخول",entering:"جاري الدخول…",
@@ -81,6 +83,8 @@ const T = {
   urcodAbout:"URCOD builds ready-made and custom systems for restaurants and businesses, on phone and desktop, with each client getting a copy in its own brand.",
   devT:"Developer",sysT:"Our systems",sys:["Digital menu","Restaurant management","Gym management","Payroll & attendance","ERP: customers & stock","Professional websites"],
   getCopy:"Want a copy for your restaurant or a custom system?",ver:"Version",
+  install:"Install the app",installSub:"Open the menu from your home screen",installT:"Add the menu to your phone",installP:"Opens faster, no need to look for the link.",installGo:"Install",
+  installed:"The app is installed.",iosT:"Install on iPhone",ios1:"Tap the Share button {i} at the bottom of Safari",ios2:"Choose \u201cAdd to Home Screen\u201d",ios3:"Tap \u201cAdd\u201d. The menu now sits with your apps",
   adminLogin:"Restaurant admin login",devLogin:"Developer login",email:"Email",pass:"Password",word:"Security word",passAgain:"Password again",
   setupTitle:"First-time setup",setupHint:"Choose the developer password and security word. You'll use them with 10 taps on the URCOD logo.",setupGo:"Set up and sign in",
   errShort:"Password needs 6+ characters and the security word 3+.",errMatch:"The passwords don't match.",noAdmin:"No admin account yet. Contact URCOD.",enter:"Sign in",entering:"Signing in…",
@@ -611,6 +615,32 @@ function render() {
 /* ═════════ boot ═════════ */
 lang = lang || "ar"; root.lang = lang; root.dir = lang === "ar" ? "rtl" : "ltr";
 const savedTheme = store.get("theme", null); if (savedTheme) root.dataset.theme = savedTheme;
+/* ═════════ install as an app ═════════
+   أندرويد/كروم: زرار بيفتح نافذة التثبيت الرسمية. آيفون: خطوات «مشاركة › إضافة للشاشة الرئيسية».
+   الشريط بيظهر مرة واحدة بعد ثواني، ولو اتقفل مابيظهرش تاني؛ والزرار فاضل في قايمة النقط. */
+let deferredInstall = null;
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+function installReady() {
+  if (standalone()) return;
+  $("#installItem").hidden = $("#installSep").hidden = false;
+  if (!store.get("installDismissed", false)) setTimeout(() => { if (!standalone() && !$("#sheet").classList.contains("open")) $("#installBar").hidden = false; }, 6000);
+}
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferredInstall = e; installReady(); });
+addEventListener("appinstalled", () => { $("#installBar").hidden = true; $("#installItem").hidden = $("#installSep").hidden = true; toast(T[lang].installed); });
+if (isIOS() && !standalone()) installReady();
+async function doInstall() {
+  $("#installBar").hidden = true; menu(false);
+  if (deferredInstall) { deferredInstall.prompt(); const r = await deferredInstall.userChoice.catch(() => ({})); deferredInstall = null;
+    if (r.outcome === "accepted") { $("#installItem").hidden = $("#installSep").hidden = true; } return; }
+  const t = T[lang], share = '<svg class="ic" viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M6 11v9h12v-9"/></svg>';
+  $("#sheet").innerHTML = `<div class="grab"></div><div class="s-body"><h2 id="sTitle">${t.iosT}</h2>
+    <ol class="ios-steps"><li>${t.ios1.replace("{i}", share)}</li><li>${t.ios2}</li><li>${t.ios3}</li></ol></div>`;
+  $("#sheet").classList.add("open"); $("#scrim").classList.add("open"); document.body.style.overflow = "hidden";
+}
+$("#installItem").onclick = doInstall; $("#ibGo").onclick = doInstall;
+$("#ibX").onclick = () => { $("#installBar").hidden = true; store.set("installDismissed", true); };
+
 syncTheme(); skeleton(); $("#rLogo").innerHTML = logoHTML();
 let first = true;
 MenuData.load(res => {
