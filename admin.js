@@ -161,9 +161,15 @@ function go(t) {
   if (on) { ind.style.width = on.offsetWidth + "px"; ind.style.transform = `translateX(${on.offsetLeft}px)`; }
   render(); scrollTo({ top: 0 });
 }
+window.go = go;
 $("#tabs").addEventListener("click", e => { const b = e.target.closest("[data-tab]"); if (b) go(b.dataset.tab); });
 addEventListener("resize", () => { const on = $(".tabs button[aria-current]"); if (on) { $("#tabInd").style.width = on.offsetWidth + "px"; $("#tabInd").style.transform = `translateX(${on.offsetLeft}px)`; } });
-function render() { const v = { home, cats: catsView, items: itemsView, ads: adsView, settings: settingsView }[tab]; $("#view").innerHTML = `<div class="view">${v()}</div>`; if (tab === "settings") drawQR(); }
+function render() {
+  const v = { home, cats: catsView, items: itemsView, ads: adsView, settings: settingsView, print: () => window.MenuPrint ? window.MenuPrint.view(menu) : "" }[tab];
+  $("#view").innerHTML = `<div class="view">${v()}</div>`;
+  if (tab === "settings") drawQR();
+  if (tab === "print" && window.MenuPrint) window.MenuPrint.init(menu);
+}
 const menuLink = () => location.href.replace(/[^/]*([?#].*)?$/, "");
 function drawQR() {
   const cv = $("#qrCanvas"); if (!cv || !window.MenuQR) return;
@@ -194,6 +200,10 @@ function home() {
     <button class="btn" data-act="newCat">${I.plus}قسم جديد</button>
     <button class="btn" data-act="newAd">${I.plus}إعلان جديد</button>
   </div>
+  <button class="btn" data-act="menuPrint" style="border:1.5px solid var(--brand);color:var(--brand);font-weight:800;background:var(--surface)">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+    طباعة المنيو الاحترافية | Menu Print (A4)
+  </button>
   <button class="btn" data-act="excel">${I.sheet}استيراد أو تصدير المنيو بـ Excel</button>
   <div class="card"><div class="row" style="margin-bottom:10px"><h2 class="grow">العروض النشطة والمجدولة</h2><span class="muted">${fmt(live.length)}</span></div>
     ${live.length ? `<div class="list">${live.sort((a, b) => new Date(a.offer.endAt) - new Date(b.offer.endAt)).map((p, i) => itemRow(p, i)).join("")}</div>` : `<div class="empty">مفيش عروض شغالة. افتح أي صنف وفعّل «عليه عرض».</div>`}
@@ -526,6 +536,15 @@ function settingsView() {
       <div class="grow"><p class="hint" style="margin:0">اطبعه وحطه على الترابيزات والكاشير وباب المحل. الزبون يصوّره بكاميرا الموبايل فيفتح المنيو على طول.</p>
         <button class="btn primary" data-act="qrDl">تنزيل الصورة (PNG للطباعة)</button><p class="hint" id="qrErr" style="margin:0"></p></div></div>
   </fieldset>
+  <fieldset><legend>طباعة المنيو (A4)</legend>
+    <div class="row">
+      <div class="grow"><p class="hint" style="margin:0">معاينة المنيو وطباعته أو حفظه كملف PDF بتصميم A4 احترافي، مع إمكانية تخصيص الألوان والصور الزخرفية للأقسام.</p></div>
+      <button class="btn primary" type="button" data-act="menuPrint">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/></svg>
+        فتح طباعة المنيو
+      </button>
+    </div>
+  </fieldset>
   <fieldset><legend>هوية المطعم</legend>
     <div class="two stack"><label class="f">الاسم بالعربي${bind("brand.name.ar", b.name.ar)}</label><label class="f">بالإنجليزي${bind("brand.name.en", b.name.en, 'dir="ltr"')}</label></div>
     <div class="two stack"><label class="f">العبارة التعريفية${bind("brand.tagline.ar", b.tagline.ar)}</label><label class="f">بالإنجليزي${bind("brand.tagline.en", b.tagline.en, 'dir="ltr"')}</label></div>
@@ -777,6 +796,7 @@ document.addEventListener("click", e => {
     case "restore": { menu = restoreOffer.menu; sessionUploads = restoreOffer.sessionUploads || []; pendingDeletes = restoreOffer.pendingDeletes || []; restoreOffer = null; ensureShape(); markDirty(); render(); toast("التعديلات رجعت"); break; }
     case "dropDraft": restoreOffer = null; store.del("draft"); render(); break;
     case "excel": excelSheet(); break;
+    case "menuPrint": go("print"); break;
     case "qrDl": { const cv = $("#qrCanvas"); if (cv?.width > 300) MenuQR.download(cv, "qr-" + (C.clientId || "menu") + ".png"); else toast("الـ QR لسه بيتجهّز، ثانية وجرّب.", true); break; }
     case "xlExport": { const d = new Date(), p = n => String(n).padStart(2, "0");
       el.disabled = true; MenuExcel.exportMenu(menu, `menu-${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}.xlsx`)

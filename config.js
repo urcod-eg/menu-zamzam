@@ -6,18 +6,18 @@
    ───────────────────────────────────────────────────────────── */
 window.URCOD_CONFIG = {
   /* معرّف ثابت للعميل (بيتكتب في السجلات ومفتاح التخزين على الجهاز) */
-  clientId: "menu-zamzam",
+  clientId: "demo-restaurant",
 
   /* true = يشتغل على بيانات sample-menu.js من غير Firebase (للتجربة والديمو)
      false = يقرا من Firestore */
-  useSample: false,
+  useSample: true,
 
   /* انسخها من Firebase Console › Project settings › Your apps › Web app */
   firebase: {
-    apiKey: "AIzaSyDk4odieXA96C_c_7CW8rKqA8w9BvyIBy0",
-    authDomain: "menu-zamzam.firebaseapp.com",
-    projectId: "menu-zamzam",
-    appId: "1:108755766743:web:2a312e29b8f72ffb19cf92"
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    appId: ""
   },
 
   /* أقل مدة بين فحصين لرقم الإصدار على نفس الجهاز.

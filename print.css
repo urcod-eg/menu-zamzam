@@ -1,0 +1,682 @@
+/* ─────────────────────────────────────────────────────────────
+   URCOD Digital Menu — أنماط طباعة المنيو (A4)
+   ───────────────────────────────────────────────────────────── */
+
+:root {
+  --print-brand: #1f5a3d;
+}
+
+/* ═════════ حاوية الميزة في لوحة التحكم ═════════ */
+.print-feature-root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: relative;
+  width: 100%;
+}
+
+.print-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.pd-head-info h1 {
+  margin: 0 0 4px;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.pd-head-info p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.pd-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pd-print-btn {
+  background: var(--print-brand) !important;
+  color: #fff !important;
+  border-color: var(--print-brand) !important;
+  font-size: 0.95rem;
+  padding: 0 20px;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--print-brand) 30%, transparent);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.pd-print-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--print-brand) 40%, transparent);
+}
+
+/* ═════════ لوحة الإعدادات الجانبية القابلة للطي ═════════ */
+.print-settings-drawer {
+  position: fixed;
+  top: 0;
+  inset-inline-end: 0;
+  width: 440px;
+  max-width: 92vw;
+  height: 100vh;
+  background: var(--surface);
+  border-inline-start: 1px solid var(--line);
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(110%);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[dir="rtl"] .print-settings-drawer {
+  transform: translateX(-110%);
+}
+
+.print-settings-drawer.open {
+  transform: translateX(0) !important;
+}
+
+.ps-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ps-drawer-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.ps-drawer-body {
+  padding: 16px 20px 80px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ps-color-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.ps-color-picker-row input[type="color"] {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  background: transparent;
+}
+
+/* بطاقات الأقسام في الإعدادات */
+.ps-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ps-cat-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: opacity 0.2s;
+}
+
+.ps-cat-card.disabled {
+  opacity: 0.55;
+}
+
+.ps-cat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ps-cat-reorder {
+  display: flex;
+  gap: 4px;
+}
+
+.ps-cat-img-box {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  padding: 10px;
+  border-radius: 12px;
+}
+
+.ps-cat-img-preview {
+  width: 72px;
+  height: 72px;
+  border-radius: 10px;
+  background: var(--soft);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-size: 0.72rem;
+  text-align: center;
+  flex: none;
+}
+
+.ps-cat-img-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ps-cat-img-controls {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* ═════════ حاوية معاينة صفحات A4 على الشاشة ═════════ */
+.print-preview-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding: 20px 0 60px;
+  width: 100%;
+}
+
+.a4-sheet-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.a4-sheet-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.a4-meta-badge {
+  background: var(--ink);
+  color: var(--surface);
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 3px 12px;
+  border-radius: 99px;
+  letter-spacing: 0.3px;
+}
+
+/* ═════════ تصميم صفحة A4 ═════════ */
+.a4-page {
+  background: #ffffff;
+  color: #1a1a1a;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-radius: 4px;
+  position: relative;
+  box-sizing: border-box;
+  font-family: var(--font);
+  transition: width 0.2s, min-height 0.2s;
+  overflow: hidden;
+}
+
+/* المقاس الرأسي القياسي لورق A4 */
+.a4-page.portrait {
+  width: 210mm;
+  min-height: 297mm;
+  max-width: 100%;
+}
+
+/* المقاس الأفقي لورق A4 */
+.a4-page.landscape {
+  width: 297mm;
+  min-height: 210mm;
+  max-width: 100%;
+}
+
+.a4-page-inner {
+  padding: 12mm 14mm 10mm 14mm;
+  display: flex;
+  flex-direction: column;
+  min-height: inherit;
+  box-sizing: border-box;
+}
+
+/* ترويسة الصفحة (الشعار + اسم المطعم) */
+.a4-page-header {
+  margin-bottom: 8mm;
+  text-align: center;
+}
+
+.a4-header-main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.a4-logo-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f5f5f5;
+  display: grid;
+  place-items: center;
+}
+
+.a4-logo-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.a4-title-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.a4-restaurant-name {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--print-brand, #1f5a3d);
+  letter-spacing: -0.3px;
+  line-height: 1.25;
+}
+
+.a4-tagline {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 600;
+}
+
+.a4-header-decor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 6px;
+  color: var(--print-brand, #1f5a3d);
+}
+
+.a4-header-decor .a4-line {
+  height: 1.5px;
+  width: 90px;
+  background: linear-gradient(to right, transparent, color-mix(in srgb, var(--print-brand, #1f5a3d) 60%, #fff), transparent);
+}
+
+.a4-header-decor .a4-ornament {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+
+/* محتوى الصفحة والأقسام */
+.a4-page-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7mm;
+}
+
+.a4-category-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4mm;
+}
+
+/* بنر الصورة الزخرفية للقسم */
+.a4-cat-banner {
+  position: relative;
+  width: 100%;
+  height: 38mm;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.a4-cat-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.a4-banner-overlay {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 10px 16px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.4) 65%, transparent 100%);
+  display: flex;
+  align-items: center;
+}
+
+.a4-banner-overlay .a4-cat-title {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.2px;
+}
+
+.a4-cat-title .cat-cont {
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.9;
+  margin-inline-start: 6px;
+}
+
+/* ترويسة القسم بدون صورة (نصوص وزخرفة فاخرة) */
+.a4-cat-header-clean {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2mm 0 1mm;
+}
+
+.a4-cat-header-clean .a4-cat-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--print-brand, #1f5a3d);
+  white-space: nowrap;
+}
+
+.a4-cat-header-clean .a4-c-line {
+  flex: 1;
+  height: 1.5px;
+  background: color-mix(in srgb, var(--print-brand, #1f5a3d) 30%, #ddd);
+}
+
+/* شبكة الأصناف */
+.a4-items-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4mm 7mm;
+}
+
+.a4-page.landscape .a4-items-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3.5mm 6mm;
+}
+
+/* بطاقة الصنف */
+.print-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pi-header {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.pi-name {
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.pi-leader {
+  flex: 1;
+  border-bottom: 1.5px dotted #c5c5c5;
+  margin: 0 4px;
+  transform: translateY(-3px);
+  min-width: 14px;
+}
+
+.pi-price-wrap {
+  flex: none;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: baseline;
+}
+
+.pi-price-box {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.pi-pr {
+  font-weight: 800;
+  color: var(--print-brand, #1f5a3d);
+  font-size: 0.92rem;
+}
+
+.pi-old-pr {
+  color: #888;
+  font-size: 0.78rem;
+  margin-inline-end: 2px;
+}
+
+.pi-cur {
+  font-size: 0.72rem;
+  color: #555;
+  font-weight: 600;
+}
+
+.pi-desc {
+  margin: 0;
+  font-size: 0.76rem;
+  color: #555555;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.pi-variants {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 0.78rem;
+  flex-wrap: wrap;
+}
+
+.pi-variant {
+  display: inline-flex;
+  gap: 3px;
+  align-items: baseline;
+}
+
+.pi-v-lbl {
+  color: #666;
+}
+
+.pi-v-pr {
+  font-weight: 800;
+  color: var(--print-brand, #1f5a3d);
+}
+
+.pi-v-sep {
+  color: #aaa;
+}
+
+/* تذييل الصفحة */
+.a4-page-footer {
+  margin-top: auto;
+  padding-top: 3.5mm;
+  border-top: 1px solid #e2e2e2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.74rem;
+  color: #666;
+}
+
+.a4-footer-contact {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.a4-f-sep {
+  color: #bbb;
+}
+
+.a4-page-num {
+  font-weight: 700;
+  color: #444;
+  white-space: nowrap;
+}
+
+.print-empty-state {
+  text-align: center;
+  padding: 48px 16px;
+  background: var(--surface);
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  color: var(--muted);
+  max-width: 500px;
+}
+
+.print-empty-state .ic {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 12px;
+  color: var(--warn);
+}
+
+/* ═════════ قواعد الطباعة الفعلية (@media print) ═════════ */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0 !important;
+  }
+
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    font-size: 11pt !important;
+  }
+
+  /* إخفاء عناصر لوحة الإدارة والأزرار تمامًا */
+  header.top,
+  nav.tabs,
+  #scrim,
+  #sheet,
+  .toast,
+  .no-print,
+  .print-settings-drawer,
+  .print-dashboard-header,
+  .a4-sheet-meta {
+    display: none !important;
+  }
+
+  #main {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+  }
+
+  .print-feature-root,
+  .print-preview-container {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+    display: block !important;
+  }
+
+  .a4-sheet-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    display: block !important;
+  }
+
+  .a4-sheet-wrapper:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  .a4-page {
+    width: 210mm !important;
+    height: 297mm !important;
+    max-height: 297mm !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  .a4-page.landscape {
+    width: 297mm !important;
+    height: 210mm !important;
+    max-height: 210mm !important;
+  }
+
+  .a4-page-inner {
+    padding: 10mm 12mm 8mm 12mm !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* منع انقسام بطاقة الصنف أو العناوين */
+  .print-item,
+  .a4-cat-banner,
+  .a4-cat-header-clean,
+  .a4-page-header,
+  .a4-page-footer {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .a4-cat-banner,
+  .a4-cat-header-clean {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+}
+
